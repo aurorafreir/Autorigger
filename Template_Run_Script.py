@@ -20,10 +20,12 @@ if path_dir not in sys.path:
 import Build_Components as bc # Needs to be imported after modification to sys.path
 reload(bc)
 
+
 # Load the Build_Components class as components and set up it's class-wide variables
 components = bc.BuildComponents(
     char_name="Char"
 )
+
 
 class Char_Builder(object):
     """
@@ -87,12 +89,12 @@ class Char_Builder(object):
         cmds.parent(self.neckparts[0], self.spineparts[1][1])
 
         # Constrain Scapulas to Chest
-        cmds.parentConstraint(self.spineparts[1][1], self.Lf_armparts[1][0], mo=1)
-        cmds.parentConstraint(self.spineparts[1][1], self.Rt_armparts[1][0], mo=1)
+        cmds.parentConstraint(self.spineparts[1][1], self.Lf_armparts[1][0], maintainOffset=True)
+        cmds.parentConstraint(self.spineparts[1][1], self.Rt_armparts[1][0], maintainOffset=True)
 
         # Constrain hands to wrists
-        cmds.parentConstraint(self.Lf_armparts[3][2], self.Lf_handparts, mo=1)
-        cmds.parentConstraint(self.Rt_armparts[3][2], self.Rt_handparts, mo=1)
+        cmds.parentConstraint(self.Lf_armparts[3][2], self.Lf_handparts, maintainOffset=True)
+        cmds.parentConstraint(self.Rt_armparts[3][2], self.Rt_handparts, maintainOffset=True)
 
         cmds.select(d=1)
 
@@ -114,19 +116,19 @@ class Char_Builder(object):
 
         # Add the Scapula_CTRLs, ArmAttrs_CTRLs, IK_CTRLs, PV_CTRLs, and FK_CTRLs to the Controls_Disp layer
         for armside in [self.Lf_armparts, self.Rt_armparts]:
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[1][1], nr=1)
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[2][1], nr=1)
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[4][1], nr=1)
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[5][1], nr=1)
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[6], nr=1)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[1][1], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[2][1], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[4][1], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[5][1], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[6], noRecurse=True)
 
         # Add all Nurbs curve transforms (not the shapes) on the hand to the Controls_Disp layer
         for grp in [self.Lf_handparts, self.Rt_handparts]:
-            for ctrl in cmds.listRelatives(grp, ad=1, type="transform"):
+            for ctrl in cmds.listRelatives(grp, allDescendents=True, type="transform"):
                 if "_CTRL" not in ctrl:
                     pass
                 else:
-                    cmds.editDisplayLayerMembers(self.setupparts[2][2], ctrl, nr=1)
+                    cmds.editDisplayLayerMembers(self.setupparts[2][2], ctrl, noRecurse=True)
 
 cb = Char_Builder()
 cb.components_build()         # Call the components_build   function from the Char_Builder class
