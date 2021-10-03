@@ -11,6 +11,16 @@ from maya import cmds
 
 
 
+"""
+TODO UPDATES
+- Clean up Twist code to be less destructive
+- Clean up function outputs to use dictionaries instead of arbitrary lists
+- Check all variable names to be consistent with all_lower_case var names
+- Swap out all short flag names for more readable long flag names
+- Swap out `var + "" + var` for "{}{}".format(var, var)
+"""
+
+
 class BuildComponents(object):
     """
     This class has functions for each of the body parts required for most rigs, to be called by

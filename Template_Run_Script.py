@@ -43,6 +43,7 @@ class Char_Builder(object):
         self.Lf_handparts = []
         self.Rt_handparts = []
 
+
     def components_build(self):
         # Call each component piece, and set it's output variables
         # as class-wide variables for use in components_connect later
