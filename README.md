@@ -3,6 +3,8 @@ Still missing components, and is far from production ready, but I wanted to get 
 
 Currently I will be doing all my commits to the $Staging branch, so check there if $Master feels empty!
 
+I can't promise that anything in $Staging will work, as for the meanwhile it'll mostly be some pretty big changes to the codebase
+
 
 ## USAGE
 For each character rig you want to create, you'll want to make a new copy of `Template_Run_Script.py`, with the character name as the file name.
