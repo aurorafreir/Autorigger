@@ -5,7 +5,7 @@ This script houses each of the rig components' build scripts, to get called by e
 # Standard library imports
 
 # Third party imports
-import maya.cmds as cmds
+from maya import cmds
 
 # Local application imports
 

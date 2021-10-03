@@ -8,7 +8,7 @@ import sys
 import os.path
 
 # Third party imports
-import maya.cmds as cmds
+from maya import cmds
 from maya import mel
 
 
@@ -40,7 +40,6 @@ class Char_Builder(object):
         self.Rt_armparts = []
         self.Lf_handparts = []
         self.Rt_handparts = []
-        self.straprig = []
 
     def components_build(self):
         # Call each component piece, and set it's output variables
@@ -77,9 +76,6 @@ class Char_Builder(object):
         Rt_handparts = components.hand_setup(flipped=True)
         self.Rt_handparts = Rt_handparts
 
-        # straprig = crvrbn (Strap_GRP, Strap_CTRL)
-        straprig = components.curve_rig(partname="Strap", startjnt="Strap_1_JNT", endjnt="Strap_16_JNT")
-        self.straprig = straprig
 
     def components_connect(self):
         # Parent the Hips to the Root Control
@@ -97,11 +93,6 @@ class Char_Builder(object):
         # Constrain hands to wrists
         cmds.parentConstraint(self.Lf_armparts[3][2], self.Lf_handparts, mo=1)
         cmds.parentConstraint(self.Rt_armparts[3][2], self.Rt_handparts, mo=1)
-
-        # Skin strap NRB to bind joints
-        bindjnts = cmds.listRelatives("Ct_Root_0_JNT", ad=1)
-        strapcluster = cmds.skinCluster(bindjnts, "Strap_NRB", n="Strap_NRB_SkinCluster", sm=2)
-        cmds.copySkinWeights(ss="Body_SkinCluster", ds=strapcluster[0], nm=1, sm=1)
 
         cmds.select(d=1)
 
@@ -137,8 +128,7 @@ class Char_Builder(object):
                 else:
                     cmds.editDisplayLayerMembers(self.setupparts[2][2], ctrl, nr=1)
 
-
-ac = Char_Builder()
-ac.components_build()         # Call the components_build   function from the Char_Builder class
-ac.components_connect()       # Call the components_connect function from the Char_Builder class
-ac.rig_cleanup()              # Call the rig_cleanup        function from the Char_Builder class
+cb = Char_Builder()
+cb.components_build()         # Call the components_build   function from the Char_Builder class
+cb.components_connect()       # Call the components_connect function from the Char_Builder class
+cb.rig_cleanup()              # Call the rig_cleanup        function from the Char_Builder class
