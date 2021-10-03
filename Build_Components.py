@@ -682,9 +682,7 @@ class BuildComponents(object):
         cmds.xform(pvgrp[0],
                    t=(self.vector_lerp(cmds.xform(shouljnt.replace("_JNT", "_IK_JNT"), q=1, t=1, ws=1),
                                        cmds.xform(wristjnt.replace("_JNT", "_IK_JNT"), q=1, t=1, ws=1),
-                                       .5)),
-                   ws=1
-                   )
+                                       .5)), ws=1)
         tempaimconst = cmds.aimConstraint((cmds.listRelatives(wristjnt, p=1)[0]).replace("_JNT", "_IK_JNT"), pvgrp[0])
         cmds.delete(tempaimconst)
         cmds.xform(pvgrp[0], t=(50,0,0), r=1, os=1)
@@ -814,8 +812,17 @@ class BuildComponents(object):
         cmds.select(d=1)
 
 
-        return shoulloc, scapulagrp, armattrsgrp, connectjnts, ikgrp, pvgrp, fkctrls
-
+        class Arm:
+            def __init__(self, shoulloc, scapulagrp, armattrsgrp, connectjnts, ikgrp, pvgrp, fkctrls):
+                self.shoulloc = shoulloc
+                self.scapulagrp = scapulagrp
+                self.armattrsgrp = armattrsgrp 
+                self.connectjnts = connectjnts 
+                self.ikgrp = ikgrp
+                self.pvgrp = pvgrp
+                self.fkctrls = fkctrls
+            
+        return Arm(shoulloc, scapulagrp, armattrsgrp, connectjnts, ikgrp, pvgrp, fkctrls)
 
 
     def hand_setup(self, flipped=False):
@@ -979,7 +986,11 @@ class BuildComponents(object):
         # Deselect everything to make sure it doesn't mess with other parts of the code
         cmds.select(d=1)
 
-        return handgrp
+        class Hand:
+            def __init__(self, handgrp):
+                self.handgrp = handgrp
+            
+        return Hand(handgrp)
 
 
     def curve_rig(self, partname="",

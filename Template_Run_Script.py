@@ -53,7 +53,7 @@ class Char_Builder(object):
         self.setupparts = setupparts
 
         # spineparts = hipsgrp (Hips_GRP, Hips_CTRL), chestgrp (Chest_GRP, Chest_CTRL),
-        spineparts = components.spine_setup(startjnt="Ct_Root_0_JNT", endjnt="Ct_Chest_0_JNT")
+        spineparts = components.spine_setup(startjnt="Ct_Root_0_JNT", endjnt="Ct_Spine_4_JNT")
 
         self.spineparts = spineparts
 
@@ -90,12 +90,12 @@ class Char_Builder(object):
         cmds.parent(self.neckparts[0], self.spineparts[1][1])
 
         # Constrain Scapulas to Chest
-        cmds.parentConstraint(self.spineparts[1][1], self.Lf_armparts[1][0], maintainOffset=True)
-        cmds.parentConstraint(self.spineparts[1][1], self.Rt_armparts[1][0], maintainOffset=True)
+        cmds.parentConstraint(self.spineparts[1][1], self.Lf_armparts.scapulagrp[0], maintainOffset=True)
+        cmds.parentConstraint(self.spineparts[1][1], self.Rt_armparts.scapulagrp[0], maintainOffset=True)
 
         # Constrain hands to wrists
-        cmds.parentConstraint(self.Lf_armparts[3][2], self.Lf_handparts, maintainOffset=True)
-        cmds.parentConstraint(self.Rt_armparts[3][2], self.Rt_handparts, maintainOffset=True)
+        cmds.parentConstraint(self.Lf_armparts.connectjnts[2], self.Lf_handparts.handgrp, maintainOffset=True)
+        cmds.parentConstraint(self.Rt_armparts.connectjnts[2], self.Rt_handparts.handgrp, maintainOffset=True)
 
         cmds.select(d=1)
 
@@ -109,7 +109,7 @@ class Char_Builder(object):
         components.lockhideattr(self.neckparts[0], hide=False)
 
         # Lock scale on Hand groups
-        for side in [self.Lf_handparts, self.Rt_handparts]:
+        for side in [self.Lf_handparts.handgrp, self.Rt_handparts.handgrp]:
             components.lockhideattr(side, translate=False, rotate=False)
 
         # Controls Display Layer
