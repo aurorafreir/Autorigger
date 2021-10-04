@@ -12,3 +12,8 @@ For each character rig you want to create, you'll want to make a new copy of `Te
 You can then edit this file to create all the individual pieces for that specific character, based on the build components in `Build_Components.py`
 
 Finally you can run the individual character's build script from inside the rig file to build the rig 
+
+## Example rig
+
+Contains ribbon based spine, FKIK arms with space switching, full hand rig, digitgrade legs, and other parts
+![image](https://user-images.githubusercontent.com/37246948/135916298-46022efe-c81f-4022-a0cb-d90006d67175.png)
