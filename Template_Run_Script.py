@@ -79,57 +79,78 @@ class Char_Builder(object):
         Rt_handparts = components.hand_setup(flipped=True)
         self.Rt_handparts = Rt_handparts
 
+        # Tail
+        # tailparts = components.fkchain(partname="Ct_Tail", startjnt="Ct_Tail_0_JNT",
+        #                                endjnt="Ct_Tail_end_JNT", scale=4,
+        #                                shape="circle")
+        # self.tailparts = tailparts
+
+        # Legs
+        Lf_legparts = components.digileg(partname="Lf_Leg", startjnt="Lf_Leg_0_JNT",
+                                      kneejnt="Lf_Leg_1_JNT", anklejnt="Lf_Leg_2_JNT",
+                                      heeljnt="Lf_Leg_3_JNT", footjnt="Lf_Paw_0_JNT")
+        self.Lf_legparts = Lf_legparts
+
+        Rt_legparts = components.digileg(partname="Rt_Leg", startjnt="Rt_Leg_0_JNT",
+                                      kneejnt="Rt_Leg_1_JNT", anklejnt="Rt_Leg_2_JNT",
+                                      heeljnt="Rt_Leg_3_JNT", footjnt="Rt_Paw_0_JNT",
+                                        flipped=1)
+        self.Rt_legparts = Rt_legparts
+
 
     def components_connect(self):
         # Parent the Hips to the Root Control
-        cmds.parent(self.spineparts[0][0], self.setupparts[0][1])
+        cmds.parent(self.spineparts.hipsgrp[0], self.setupparts.rootgroup[1])
         # Parent the Spine_RBN_Rig group to the Root_CTRL
-        cmds.parent(self.spineparts[2], self.setupparts[1])
+        cmds.parent(self.spineparts.spinerbnrig, self.setupparts.main_rig_group)
 
         # Parent Neck to Chest
-        cmds.parent(self.neckparts[0], self.spineparts[1][1])
+        cmds.parent(self.neckparts.neckgrp[0], self.spineparts.chestgrp[1])
 
         # Constrain Scapulas to Chest
-        cmds.parentConstraint(self.spineparts[1][1], self.Lf_armparts.scapulagrp[0], maintainOffset=True)
-        cmds.parentConstraint(self.spineparts[1][1], self.Rt_armparts.scapulagrp[0], maintainOffset=True)
+        cmds.parentConstraint(self.spineparts.chestgrp[1], self.Lf_armparts.scapulagrp[0], maintainOffset=True)
+        cmds.parentConstraint(self.spineparts.chestgrp[1], self.Rt_armparts.scapulagrp[0], maintainOffset=True)
 
         # Constrain hands to wrists
         cmds.parentConstraint(self.Lf_armparts.connectjnts[2], self.Lf_handparts.handgrp, maintainOffset=True)
         cmds.parentConstraint(self.Rt_armparts.connectjnts[2], self.Rt_handparts.handgrp, maintainOffset=True)
+
+        cmds.parentConstraint(self.neckparts.neckgrp[1], "Head_GRP", maintainOffset=True)
 
         cmds.select(d=1)
 
 
     def rig_cleanup(self):
         # Lock all attrs on Root_GRP
-        components.lockhideattr(self.setupparts[0][0], hide=False)
+        components.lockhideattr(self.setupparts.rootgroup[0], hide=False)
         # Lock all attrs on Hips_GRP, Chest_GRP, and Neck_GRP
-        components.lockhideattr(self.spineparts[0][0], hide=False)
-        components.lockhideattr(self.spineparts[1][0], hide=False)
-        components.lockhideattr(self.neckparts[0], hide=False)
+        components.lockhideattr(self.spineparts.hipsgrp[0], hide=False)
+        components.lockhideattr(self.spineparts.chestgrp[0], hide=False)
+        components.lockhideattr(self.neckparts.neckgrp[0], hide=False)
 
         # Lock scale on Hand groups
         for side in [self.Lf_handparts.handgrp, self.Rt_handparts.handgrp]:
             components.lockhideattr(side, translate=False, rotate=False)
 
         # Controls Display Layer
-        ctrlsdisplaylayer = self.setupparts[2][2]
+        ctrlsdisplaylayer = self.setupparts.displayers[2]
 
         # Add the Scapula_CTRLs, ArmAttrs_CTRLs, IK_CTRLs, PV_CTRLs, and FK_CTRLs to the Controls_Disp layer
         for armside in [self.Lf_armparts, self.Rt_armparts]:
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[1][1], noRecurse=True)
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[2][1], noRecurse=True)
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[4][1], noRecurse=True)
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[5][1], noRecurse=True)
-            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside[6], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside.scapulagrp[1], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside.armattrsgrp[1], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside.ikgrp[1], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside.pvgrp[1], noRecurse=True)
+            cmds.editDisplayLayerMembers(ctrlsdisplaylayer, armside.fkctrls, noRecurse=True)
 
         # Add all Nurbs curve transforms (not the shapes) on the hand to the Controls_Disp layer
+        # for part in [scapulagrp, armattrsgrp, ikgrp, pvgrp, fkctrls]:
         for grp in [self.Lf_handparts, self.Rt_handparts]:
-            for ctrl in cmds.listRelatives(grp, allDescendents=True, type="transform"):
+            for ctrl in cmds.listRelatives(grp.handgrp, allDescendents=True, type="transform"):
                 if "_CTRL" not in ctrl:
                     pass
                 else:
-                    cmds.editDisplayLayerMembers(self.setupparts[2][2], ctrl, noRecurse=True)
+                    cmds.editDisplayLayerMembers(self.setupparts.displayers[2], ctrl, noRecurse=True)
 
 cb = Char_Builder()
 cb.components_build()         # Call the components_build   function from the Char_Builder class

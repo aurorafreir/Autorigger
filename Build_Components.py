@@ -466,7 +466,13 @@ class BuildComponents(object):
         # Deselect everything to make sure it doesn't mess with other parts of the code
         cmds.select(d=1)
 
-        return hipsgrp, chestgrp, "Ct_Spine_RBN_Rig"
+        class Spine:
+            def __init__(self, hipsgrp, chestgrp):
+                self.hipsgrp = hipsgrp
+                self.chestgrp = chestgrp
+                self.spinerbnrig = "Ct_Spine_RBN_Rig"
+            
+        return Spine(hipsgrp, chestgrp)
 
 
     def neck_setup(self, neckjnt="",
@@ -493,7 +499,12 @@ class BuildComponents(object):
         # Deselect everything to make sure it doesn't mess with other parts of the code
         cmds.select(d=1)
 
-        return neckgrp
+
+        class Neck:
+            def __init__(self, neckgrp):
+                self.neckgrp = neckgrp
+            
+        return Neck(neckgrp)
 
 
     def arm_setup(self, scapjnt="",
