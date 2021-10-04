@@ -48,23 +48,20 @@ class Char_Builder(object):
         # Call each component piece, and set it's output variables
         # as class-wide variables for use in components_connect later
 
-        # setupparts = rootgroup (Root_GRP, Root_CTRL)
+        # Basic character setup
         setupparts = components.character_setup()
         self.setupparts = setupparts
 
-        # spineparts = hipsgrp (Hips_GRP, Hips_CTRL), chestgrp (Chest_GRP, Chest_CTRL),
+        # Spine setup
         spineparts = components.spine_setup(startjnt="Ct_Root_0_JNT", endjnt="Ct_Spine_4_JNT")
 
         self.spineparts = spineparts
 
-        # neckparts = neckgrp (Neck_GRP, Neck_CTRL),
+        # Neck setup
         neckparts = components.neck_setup(neckjnt="Ct_Neck_0_JNT")
         self.neckparts = neckparts
 
-        # armparts = shoulloc (Lf_Scapula_Shoulder_LOC), scapulagrp (Lf_Scapula_GRP, Lf_Scapula_CTRL),
-        # armattrsgrp (Lf_ArmAttrs_GRP, Lf_ArmAttrs_CTRL), connectjnts (Lf_Arm_(0-2)_Connect_JNT),
-        # ikgrp (Lf_Arm_IK_GRP, Lf_Arm_IK_CTRL), pvgrp (Lf_Arm_IK_PV_GRP, Lf_Arm_IK_PV_CTRL),
-        # fkctrls (Lf_Arm_FK_0_CTRL, Lf_Arm_FK_1_CTRL, Lf_Arm_FK_2_CTRL)
+        # Arm setup
         Lf_armparts = components.arm_setup(scapjnt="Lf_Clavicle_0_JNT", shouljnt="Lf_Arm_0_JNT",
                                              wristjnt="Lf_Arm_2_JNT")
         self.Lf_armparts = Lf_armparts
@@ -73,19 +70,14 @@ class Char_Builder(object):
                                              wristjnt="Rt_Arm_2_JNT", flipped=True)
         self.Rt_armparts = Rt_armparts
 
-        # handparts = handgrp (side_Hand_GRP),
+        # Hand setup
         Lf_handparts = components.hand_setup()
         self.Lf_handparts = Lf_handparts
         Rt_handparts = components.hand_setup(flipped=True)
         self.Rt_handparts = Rt_handparts
 
-        # Tail
-        # tailparts = components.fkchain(partname="Ct_Tail", startjnt="Ct_Tail_0_JNT",
-        #                                endjnt="Ct_Tail_end_JNT", scale=4,
-        #                                shape="circle")
-        # self.tailparts = tailparts
 
-        # Legs
+        # Legs setup
         Lf_legparts = components.digileg(partname="Lf_Leg", startjnt="Lf_Leg_0_JNT",
                                       kneejnt="Lf_Leg_1_JNT", anklejnt="Lf_Leg_2_JNT",
                                       heeljnt="Lf_Leg_3_JNT", footjnt="Lf_Paw_0_JNT")
