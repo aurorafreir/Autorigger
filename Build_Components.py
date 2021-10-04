@@ -29,6 +29,12 @@ class BuildComponents(object):
     def __init__(self, char_name):
         # Set up char_name as a class-wide variable to be used in the class' functions
         self.char_name = char_name
+        self.enum_kwargs = {
+            "exists":True,
+            "hidden":False,
+            "keyable":True,
+            "attributeType": "enum",
+        }
 
 
     def lerp(self, min,
@@ -364,9 +370,11 @@ class BuildComponents(object):
                 newgrp = cmds.group(n=self.char_name + "_" + group, p=parentgroup, em=1)
                 self.lockhideattr(newgrp, hide=False)
 
+        main_rig_group = self.char_name + "_Rig"
+
         # Create root control at 0,0,0 and parent it to the _Rig group
         rootgroup = self.controllers_setup(partname="Root", scale=(40,40,40), rotation=(90,0,0))
-        cmds.parent(rootgroup[0], self.char_name + "_Rig")
+        cmds.parent(rootgroup[0], main_rig_group)
 
         # Lock and hide scale and vis on root ctrl
         self.lockhideattr(rootgroup[1], translate=False, rotate=False)
@@ -384,7 +392,14 @@ class BuildComponents(object):
         # Deselect everything to make sure it doesn't mess with other parts of the code
         cmds.select(d=1)
 
-        return rootgroup, self.char_name + "_Rig", displayers
+        class CharSetup:
+            def __init__(self, rootgroup, main_rig_group, displayers):
+                self.rootgroup = rootgroup
+                self.main_rig_group = main_rig_group
+                self.displayers = displayers
+            
+        return CharSetup(rootgroup, main_rig_group, displayers)
+
 
 
     def spine_setup(self, startjnt="",
@@ -588,8 +603,8 @@ class BuildComponents(object):
         # Create FKIK, and space switching attributes for each arm
         cmds.select(armattrsgrp[1])
         cmds.addAttr(sn="FKIK", ln="FKIK", min=0, max=1, dv=0, ex=1, h=0, k=1)
-        cmds.addAttr(sn="Pos_SS", ln="Position_Space_Switching", ex=1, h=0, k=1, attributeType="enum", enumName="Root:Hips:Chest:Scapula")
-        cmds.addAttr(sn="Rot_SS", ln="Rotation_Space_Switching", ex=1, h=0, k=1, attributeType="enum", enumName="Root:Hips:Chest:Scapula")
+        cmds.addAttr(sn="Pos_SS", ln="Position_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
+        cmds.addAttr(sn="Rot_SS", ln="Rotation_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
         cmds.select(d=1)
 
         # FKIK switching setup
@@ -1156,10 +1171,8 @@ class BuildComponents(object):
         # Create FKIK, and space switching attributes for each leg
         cmds.select(legattrsgrp[1])
         cmds.addAttr(sn="FKIK", ln="FKIK", min=0, max=1, dv=0, ex=1, h=0, k=1)
-        cmds.addAttr(sn="Pos_SS", ln="Position_Space_Switching", ex=1, h=0, k=1, attributeType="enum",
-                     enumName="Root:Hips:Chest:Scapula")
-        cmds.addAttr(sn="Rot_SS", ln="Rotation_Space_Switching", ex=1, h=0, k=1, attributeType="enum",
-                     enumName="Root:Hips:Chest:Scapula")
+        cmds.addAttr(sn="Pos_SS", ln="Position_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
+        cmds.addAttr(sn="Rot_SS", ln="Rotation_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
         cmds.select(d=1)
         # default FKIK attr to IK
         cmds.setAttr(legattrsgrp[1] + ".FKIK", 1)
