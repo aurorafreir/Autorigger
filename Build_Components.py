@@ -749,17 +749,20 @@ class BuildComponents(object):
         cmds.orientConstraint(constraintslocs, ikgrp[0], mo=1)
 
         # Create setup for Space Switching for the IK hand group
-        for longname, shortname in zip(["Rotation", "Position"], ["Rot", "Pos"]):
-            for name, num in zip(constraintsnames, [0, 1, 2, 3]):
-                condnode = cmds.createNode("condition", n=side + "_Arm_" + name + "_" + shortname + "SS_COND")
-                cmds.connectAttr(armattrsgrp[1] + "." + longname + "_Space_Switching", condnode + ".secondTerm")
-                cmds.setAttr(condnode + ".firstTerm", num)
-                for i, j in zip(["True", "False"], [1, 0]):
-                    cmds.setAttr(condnode + ".colorIf" + i + "R", j)
-        for i, x in zip(["orient", "point"], ["Rot", "Pos"]):
-            for name, nameshort, num in zip(constraintslocs, constraintsnames, [0, 1, 2, 3]):
-                cmds.connectAttr(side + "_Arm_" + nameshort + "_" + x + "SS_COND.outColor.outColorR",
-                                 ikgrp[0] + "_" + i + "Constraint1." + name + "W" + str(num))
+        for attribute in ["Rotation", "Position"]:
+            for index, name in enumerate(constraintsnames):
+                condnode = cmds.createNode("condition", name="{}_Arm_{}_{}SS_COND".format(side, name, attribute[:3]))
+                cmds.connectAttr("{}.{}_Space_Switching".format(armattrsgrp[1], attribute), "{}.secondTerm".format(condnode))
+                cmds.setAttr("{}.firstTerm".format(condnode), index)
+                for true_false, set_value in zip(["True", "False"], [1, 0]):
+                    cmds.setAttr("{}.colorIf{}R".format(condnode, true_false), set_value)
+        
+        for orient_point, rot_pos in zip(["orient", "point"], ["Rot", "Pos"]):
+            index = 0
+            for name, nameshort in zip(constraintslocs, constraintsnames):
+                cmds.connectAttr("{}_Arm_{}_{}SS_COND.outColor.outColorR".format(side, nameshort, rot_pos), 
+                                 "{}_{}Constraint1.{}W{}".format(ikgrp[0], orient_point, name, str(index)))
+                index = index + 1
 
 
         class Arm:
