@@ -12,12 +12,10 @@ from maya import cmds
 
 
 """
-TODO UPDATES
-- Clean up Twist code to be less destructive
-- Clean up function outputs to use dictionaries instead of arbitrary lists
-- Check all variable names to be consistent with all_lower_case var names
-- Swap out all short flag names for more readable long flag names
-- Swap out `var + "" + var` for "{}{}".format(var, var)
+-- UPDATES --
+TODO Check all variable names to be consistent with all_lower_case var names
+TODO Swap out all short flag names for more readable long flag names
+TODO Swap out `var + "" + var` for "{}{}".format(var, var)
 """
 
 
@@ -58,14 +56,14 @@ class BuildComponents(object):
         # Create a follicle object, and attach it to the NURBS surface (nurbssurf)
         follicle = cmds.createNode('follicle')
 
-        cmds.connectAttr(nurbssurf + ".local", follicle + ".inputSurface")
-        cmds.connectAttr(nurbssurf + ".worldMatrix[0]", follicle + ".inputWorldMatrix")
+        cmds.connectAttr("{}.local".format(nurbssurf), "{}.inputSurface".format(follicle))
+        cmds.connectAttr("{}.worldMatrix[0]".format(nurbssurf), "{}.inputWorldMatrix".format(follicle))
         for name, n in zip(["Rotate", "Translate"], ["r", "t"]):
-            cmds.connectAttr(follicle + ".out" + name, cmds.listRelatives(follicle, p=1)[0] + "." + n)
+            cmds.connectAttr(follicle + ".out" + name, cmds.listRelatives("{}.{}".format(follicle, parent=1)[0], n))
         for uv, pos in zip(["U", "V"], [uPos, vPos]):
-            cmds.setAttr(follicle + ".parameter" + uv, pos)
+            cmds.setAttr("{}.parameter{}".format(follicle, uv), pos)
         for tr in ["t", "r"]:
-            cmds.setAttr(cmds.listRelatives(follicle, p=1)[0] + "." + tr, lock=1)
+            cmds.setAttr(cmds.listRelatives("{}.{}".format(follicle, parent=1)[0], tr), lock=1)
 
         return follicle
 
@@ -724,6 +722,8 @@ class BuildComponents(object):
 
 
         # Space Switching
+        # TODO convert this out to it's own function  
+
         constraints = ["Root_CTRL", "Hips_CTRL", "Chest_CTRL"]
         if flipped:
             constraints.append("Rt_Scapula_Shoulder_LOC")
@@ -763,6 +763,9 @@ class BuildComponents(object):
                 cmds.connectAttr("{}_Arm_{}_{}SS_COND.outColor.outColorR".format(side, nameshort, rot_pos), 
                                  "{}_{}Constraint1.{}W{}".format(ikgrp[0], orient_point, name, str(index)))
                 index = index + 1
+
+
+        # TODO Create a function for adding twist to limbs
 
 
         class Arm:
