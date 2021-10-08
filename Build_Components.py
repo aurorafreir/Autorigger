@@ -883,15 +883,18 @@ class BuildComponents(object):
                 joint = 0
             else:
                 joint = 1
-            remapnode = cmds.createNode("remapValue", n=side + "_" + finger + "_" + str(joint) + "_Spread_REMAP")
-            cmds.setAttr(remapnode + ".outputMax", remapvalue)
-            cmds.connectAttr(handattrsgrp[1] + ".Spread", remapnode + ".i")
-            cmds.connectAttr(remapnode + ".outValue", side + "_" + finger + "_" + str(joint) + "_Offset_GRP.rotateZ")
+            
+            strjoint = str(joint)
+
+            remapnode = cmds.createNode("remapValue", name="{}_{}_{}_Spread_REMAP".format(side, finger, strjoint))
+            cmds.setAttr("{}.outputMax".format(remapnode), remapvalue)
+            cmds.connectAttr("{}.Spread".format(handattrsgrp[1]), "{}.i".format(remapnode))
+            cmds.connectAttr("{}.outValue".format(remapnode), "{}_{}_{}_Offset_GRP.rotateZ".format(side, finger, strjoint))
 
 
         # Flip the entire handgrp group if this is for a right side hand
         if flipped:
-            cmds.xform(handgrp, s=(-1,1,1))
+            cmds.xform(handgrp, scale=(-1,1,1))
 
 
         # Loop through each finger for parent constraining each control to it's joint, and attribute locking and hiding
