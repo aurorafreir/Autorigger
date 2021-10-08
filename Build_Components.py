@@ -13,8 +13,6 @@ from maya import cmds
 
 """
 TODO UPDATES
-- Clean up Twist code to be less destructive
-- Clean up function outputs to use dictionaries instead of arbitrary lists
 - Check all variable names to be consistent with all_lower_case var names
 - Swap out all short flag names for more readable long flag names
 - Swap out `var + "" + var` for "{}{}".format(var, var)
@@ -874,10 +872,9 @@ class BuildComponents(object):
                 cmds.connectAttr(fingertwothreeremap  + ".outValue", side + "_" + finger + "_" + str(joint) + "_Offset_GRP.rotateY")
 
         # Connect thumbzeroremap and thumbonetworemap to the thumb's Offset_GRP groups
-        cmds.connectAttr(thumbzeroremap + ".outValue", side + "_Thumb_0_Offset_GRP.rotateY")
+        cmds.connectAttr("{}.outValue".format(thumbzeroremap), "{}_Thumb_0_Offset_GRP.rotateY".format(side))
         for joint in range(1, 3):
-            cmds.connectAttr(thumbonetworemap+ ".outValue",
-                             side + "_Thumb_" + str(joint) + "_Offset_GRP.rotateY")
+            cmds.connectAttr("{}.outValue".format(thumbonetworemap), "{}_Thumb_{}_Offset_GRP.rotateY".format(side, str(joint)))
 
 
         # Hand Spread
@@ -907,34 +904,41 @@ class BuildComponents(object):
 
             for fjoint in range(0, fingercount):
                 # Set up a variable for the finger naming
-                fingernameshort = side + "_" + finger + "_" + str(fjoint)
+                fingernameshort = "{}_{}_{}".format(side, finger, str(fjoint))
 
                 # Create parent constraints from each finger controller to it's respective joint
-                cmds.parentConstraint(fingernameshort + "_CTRL", fingernameshort + "_JNT", mo=1)
+                cmds.parentConstraint("{}_CTRL".format(fingernameshort), "{}_JNT".format(fingernameshort), maintainOffset=True)
+
+                # TODO check this works
+
+                lock_unkeyframe = {
+                    "lock":True,
+                    "keyable":False
+                }
 
                 # Lock and hide respective attributes for each control
                 for xyz in ["X", "Y", "Z"]:
                     # Lock and hide translate, rotation, and scale for each main joint group
                     for attr in ["translate", "rotate", "scale"]:
-                        cmds.setAttr(fingernameshort + "_GRP." + attr + xyz, l=1)
-                        cmds.setAttr(handattrsgrp[0] + "." + attr + xyz, l=1, k=0)
-                        cmds.setAttr(handattrsgrp[1] + "." + attr + xyz, l=1, k=0)
+                        for item in [fingernameshort, handattrsgrp[0], handattrsgrp[1]]:ß
+                            cmds.setAttr("{}_GRP.{}{}".format(item, attr, xyz), **lock_unkeyframe)
                     # Lock and hid translate and scale for offset groups and controls
                     for attr in ["translate", "scale"]:
-                        cmds.setAttr(fingernameshort + "_Offset_GRP." + attr + xyz, l=1)
-                        cmds.setAttr(fingernameshort + "_CTRL." + attr + xyz, l=1, k=0)
+                        cmds.setAttr("{}_Offset_GRP.{}{}".format(fingernameshort, attr, xyz), **lock_unkeyframe)
+                        cmds.setAttr("{}_CTRL.{}{}".format(fingernameshort, attr, xyz), **lock_unkeyframe)
 
-                # Lock and hide visibility for each grp, offset grp, and control
-                cmds.setAttr(fingernameshort + "_GRP.visibility", l=1)
-                cmds.setAttr(fingernameshort + "_Offset_GRP.visibility", l=1, k=0)
-                cmds.setAttr(fingernameshort + "_CTRL.visibility", l=1, k=0)
-                cmds.setAttr(handattrsgrp[1] + ".visibility", l=1, k=0)
+
+                # Lock and hide visibility for each grp, offset grp, and control on the fingers
+                for finger_item in ["GRP", "Offset_GRP", "CTRL"]:
+                    cmds.setAttr("{}_{}.visibility".format(fingernameshort, finger_item), **lock_unkeyframe)
+
+                cmds.setAttr("{}.visibility".format(handattrsgrp[1]), **lock_unkeyframe)
 
 
         cmds.parent(handgrp, self.char_name + "_Rig")
 
         # Deselect everything to make sure it doesn't mess with other parts of the code
-        cmds.select(d=1)
+        cmds.select(deselect=1)
 
         class Hand:
             def __init__(self, handgrp):
