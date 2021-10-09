@@ -783,7 +783,7 @@ class BuildComponents(object):
             colour = "yellow"
 
         # Create overall hand group
-        handgrp = cmds.group(n=side + "_Hand_GRP", em=1)
+        handgrp = cmds.group(n="{}_Hand_GRP".format(side), empty=1)
 
         fingers = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
 
@@ -797,24 +797,24 @@ class BuildComponents(object):
 
             for fjoint in range(0, fingercount):
                 # Set up a variable for the finger naming
-                fingernameshort = side + "_" + finger + "_" + str(fjoint)
+                finger_name_short = "{}_{}_{}".format(side, finger, str(fjoint))
 
                 # Create a controller for the fingers, with seperate controller setups for the first
                 # joint in each finger, with joint 0's controller being parallel to the joint
                 if fjoint == 0:
-                    fingergrp = self.controllers_setup(partname=fingernameshort, shape="square",
+                    fingergrp = self.controllers_setup(partname=finger_name_short, shape="square",
                                                        colour=colour, rotation=(0,0,0),
                                                        scale=(4,1,2), position=(2,0,3))
                     # Fix the pivot point for the controller to make sure it matches the joint's position
-                    cmds.xform(fingergrp[1], piv=(cmds.xform(fingergrp[0], t=1, q=1, ws=1)), ws=1)
+                    cmds.xform(fingergrp[1], pivot=(cmds.xform(fingergrp[0], translate=1, query=1, worldSpace=1)), worldSpace=1)
                 else:
-                    fingergrp = self.controllers_setup(partname=fingernameshort, shape="square",
+                    fingergrp = self.controllers_setup(partname=finger_name_short, shape="square",
                                                        colour=colour, rotation=(0,90,0),
                                                        scale=(2,2,3))
 
                 # Create an offset group, in the same position/rotation as the finger joint's group. (0,0,0) relatively
                 # This is used for the hand's Fist and Spread attributes
-                offsetgrp = cmds.group(n=fingernameshort + "_Offset_GRP", em=1, p=fingergrp[0])
+                offsetgrp = cmds.group(name=finger_name_short + "_Offset_GRP", empty=1, parent=fingergrp[0])
                 # Then parent the controller to the offset group
                 cmds.parent(fingergrp[1], offsetgrp)
 
@@ -822,43 +822,43 @@ class BuildComponents(object):
                 # If this is for the right side hand, get all the transforms and rotations from the left hand
                 # to position the controller's group in the correct position, as it'll be flipped later
                 if flipped:
-                    cmds.xform(fingergrp[0], t=(cmds.xform(fingernameshort.replace("Rt", "Lf") + "_JNT", q=1, t=1, ws=1)),
-                               ro=(cmds.xform(fingernameshort.replace("Rt", "Lf") + "_JNT", q=1, ro=1, ws=1)), ws=1)
+                    cmds.xform(fingergrp[0], translate=(cmds.xform(finger_name_short.replace("Rt", "Lf") + "_JNT", query=1, translate=1, worldSpace=1)),
+                               rotation=(cmds.xform(finger_name_short.replace("Rt", "Lf") + "_JNT", query=1, rotation=1, worldSpace=1)), worldSpace=1)
                 else:
-                    cmds.xform(fingergrp[0], t=(cmds.xform(fingernameshort + "_JNT", q=1, t=1, ws=1)),
-                               ro=(cmds.xform(fingernameshort + "_JNT", q=1, ro=1, ws=1)), ws=1)
+                    cmds.xform(fingergrp[0], translate=(cmds.xform("{}_JNT".format(finger_name_short), query=1, translate=1, worldSpace=1)),
+                               rotation=(cmds.xform("{}_JNT".format(finger_name_short), query=1, rotation=1, worldSpace=1)), worldSpace=1)
 
                 # For the first controller's group, parent it to the handgrp group
                 if fjoint == 0:
                     cmds.parent(fingergrp[0], handgrp)
                 # and for subsequent controllers, parent the controller's group to the previous controller
                 else:
-                    cmds.parent(fingergrp[0], side + "_" + finger + "_" + str(fjoint-1) + "_CTRL")
+                    cmds.parent(fingergrp[0], "{}_{}_{}_CTRL".format(side, finger, str(fjoint-1)))
 
 
         # Create controller for hand attributes (Fist, Spread)
-        handattrsgrp = self.controllers_setup(partname=side + "_Hand_Attrs", shape="starcircle", position=(0,0,4), scale=(2,2,2), colour=colour)
+        handattrsgrp = self.controllers_setup(partname="{}_Hand_Attrs".format(side), shape="starcircle", position=(0,0,4), scale=(2,2,2), colour=colour)
         # Position and rotate the controller at the hand location
-        cmds.xform(handattrsgrp, t=(cmds.xform("Lf" + "_Hand_1_JNT", t=1, q=1, ws=1)),
-                   ro=(cmds.xform("Lf" + "_Hand_1_JNT", ro=1, q=1, ws=1)), ws=1)
+        cmds.xform(handattrsgrp, translate=(cmds.xform("Lf_Hand_1_JNT", translate=1, query=1, worldSpace=1)),
+                   rotation=(cmds.xform("Lf_Hand_1_JNT", rotation=1, query=1, worldSpace=1)), worldSpace=1)
         # Parent to main hand group
         cmds.parent(handattrsgrp[0], handgrp)
 
         # Create Fist and Spread attributes on hand attr control
         for attr in ["Fist", "Spread"]:
-            cmds.addAttr(handattrsgrp[1], sn=attr, ln=attr, min=0, max=1, dv=0, ex=1, h=0, k=1)
+            cmds.addAttr(handattrsgrp[1], shortName=attr, longName=attr, min=0, max=1, defaultValue=0, exists=1, hidden=0, keyable=1)
 
 
         # Hand Fist
         # Create Remap node for first joint in fingers
-        fingeroneremap =   cmds.createNode("remapValue", n=side + "_Finger_1_Fist_REMAP")
+        fingeroneremap =   cmds.createNode("remapValue", name="{}_Finger_1_Fist_REMAP".format(side))
         cmds.setAttr(fingeroneremap + ".outputMax", 70)
-        fingertwothreeremap = cmds.createNode("remapValue", n=side + "_Finger_23_Fist_REMAP")
+        fingertwothreeremap = cmds.createNode("remapValue", name="{}_Finger_23_Fist_REMAP".format(side))
         cmds.setAttr(fingertwothreeremap + ".outputMax", 90)
 
-        thumbzeroremap = cmds.createNode("remapValue", n=side + "_Finger_0_Fist_REMAP")
+        thumbzeroremap = cmds.createNode("remapValue", name=side + "{}_Finger_0_Fist_REMAP".format(side))
         cmds.setAttr(thumbzeroremap + ".outputMax", 10)
-        thumbonetworemap = cmds.createNode("remapValue", n=side + "_Thumb_12_Fist_REMAP")
+        thumbonetworemap = cmds.createNode("remapValue", name=side + "_Thumb_12_Fist_REMAP")
         cmds.setAttr(thumbonetworemap + ".outputMax", 45)
 
         # Connect handattrs Fist attribute to fist remap nodes
@@ -907,10 +907,10 @@ class BuildComponents(object):
 
             for fjoint in range(0, fingercount):
                 # Set up a variable for the finger naming
-                fingernameshort = "{}_{}_{}".format(side, finger, str(fjoint))
+                finger_name_short = "{}_{}_{}".format(side, finger, str(fjoint))
 
                 # Create parent constraints from each finger controller to it's respective joint
-                cmds.parentConstraint("{}_CTRL".format(fingernameshort), "{}_JNT".format(fingernameshort), maintainOffset=True)
+                cmds.parentConstraint("{}_CTRL".format(finger_name_short), "{}_JNT".format(finger_name_short), maintainOffset=True)
 
                 # TODO check this works
 
@@ -923,17 +923,17 @@ class BuildComponents(object):
                 for xyz in ["X", "Y", "Z"]:
                     # Lock and hide translate, rotation, and scale for each main joint group
                     for attr in ["translate", "rotate", "scale"]:
-                        for item in [fingernameshort, handattrsgrp[0], handattrsgrp[1]]:ß
+                        for item in [finger_name_short, handattrsgrp[0], handattrsgrp[1]]:ß
                             cmds.setAttr("{}_GRP.{}{}".format(item, attr, xyz), **lock_unkeyframe)
                     # Lock and hid translate and scale for offset groups and controls
                     for attr in ["translate", "scale"]:
-                        cmds.setAttr("{}_Offset_GRP.{}{}".format(fingernameshort, attr, xyz), **lock_unkeyframe)
-                        cmds.setAttr("{}_CTRL.{}{}".format(fingernameshort, attr, xyz), **lock_unkeyframe)
+                        cmds.setAttr("{}_Offset_GRP.{}{}".format(finger_name_short, attr, xyz), **lock_unkeyframe)
+                        cmds.setAttr("{}_CTRL.{}{}".format(finger_name_short, attr, xyz), **lock_unkeyframe)
 
 
                 # Lock and hide visibility for each grp, offset grp, and control on the fingers
                 for finger_item in ["GRP", "Offset_GRP", "CTRL"]:
-                    cmds.setAttr("{}_{}.visibility".format(fingernameshort, finger_item), **lock_unkeyframe)
+                    cmds.setAttr("{}_{}.visibility".format(finger_name_short, finger_item), **lock_unkeyframe)
 
                 cmds.setAttr("{}.visibility".format(handattrsgrp[1]), **lock_unkeyframe)
 
