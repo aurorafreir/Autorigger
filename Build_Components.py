@@ -73,8 +73,7 @@ class BuildComponents(object):
                      translate=True, rotate=True,
                      scale=True, visibility=True):
         if not translate and not rotate and not scale and not visibility:
-            print("lockhideattr function for " + obj + " not set to do anything!")
-            return
+            raise Exception("lockhideattr function for {} not set to do anything!".format(obj))
 
         attrs = []
         if translate:
@@ -84,20 +83,21 @@ class BuildComponents(object):
         if scale:
             attrs.append("scale")
 
-        cb=1
-        l=0
-        k=1
+        kwargs = {
+
+        }
+
         if hide:
-            k=0
-            cb=0
+            kwargs.append("keyable":0)
+            kwargs.append("channelBox":0)
         if lock:
-            l=1
+            kwargs.append("lock":1)
 
         for attr in attrs:
             for xyz in ["X", "Y", "Z"]:
-                cmds.setAttr(obj + "." + attr + xyz, l=l, k=k, cb=cb )
+                cmds.setAttr("{}.{}{}".format(obj, attr, xyz), **kwargs)
         if visibility:
-            cmds.setAttr(obj + ".visibility", l=l, k=k, cb=cb)
+            cmds.setAttr("{}.visibility".format(obj), **kwargs)
 
 
     def controllers_setup(self, partname,
@@ -106,55 +106,55 @@ class BuildComponents(object):
                           colour=""):
         # To be used by other parts of this script for creating a variety of controllers
         # Create empty group
-        newgroup = cmds.group(n=partname + "_GRP", em=1)
-        shapename = partname + "_CTRL"
+        newgroup = cmds.group(name="{}_GRP".format(partname), empty=1)
+        shapename = "{}_CTRL".format(partname)
 
         if shape in "circle":
             # Create circle NURBS curve
-            newshape = cmds.circle(n=shapename, ch=0)
+            newshape = cmds.circle(name=shapename, constructionHistory=0)
             newshape = newshape[0] # Make sure that newshape is only a single string instead of [objectname + shapename]
 
         elif shape in "square":
             # Create square NURBS curve
-            newshape = cmds.curve(d=1, p=[(-.5, .5, 0), (.5, .5, 0), (.5, -.5, 0), (-.5, -.5, 0), (-.5, .5, 0)],
-                n=shapename)
+            newshape = cmds.curve(degree=1, point=[(-.5, .5, 0), (.5, .5, 0), (.5, -.5, 0), (-.5, -.5, 0), (-.5, .5, 0)],
+                name=shapename)
 
         elif shape in "cube":
             # Create cube NURBS curve
-            newshape = cmds.curve(d=1,
-                    p=[(-0.5, -0.5, .5), (-0.5, .5, .5), (.5, .5, .5), (.5, -0.5, .5), (.5, -0.5, -0.5), (.5, .5, -0.5),
+            newshape = cmds.curve(degree=1,
+                    point=[(-0.5, -0.5, .5), (-0.5, .5, .5), (.5, .5, .5), (.5, -0.5, .5), (.5, -0.5, -0.5), (.5, .5, -0.5),
                        (-0.5, .5, -0.5), (-0.5, -0.5, -0.5), (.5, -0.5, -0.5), (.5, .5, -0.5), (.5, .5, .5),
                        (-0.5, .5, .5), (-0.5, .5, -0.5), (-0.5, -0.5, -0.5), (-0.5, -0.5, .5), (.5, -0.5, .5)],
-               n=shapename)
+               name=shapename)
 
         elif shape in "pointedsquare":
-            newshape = cmds.curve(d=1,
-                                  p=[(0,0,0), (1,1,0), (2,1,0), (2,2,0), (1,2,0), (1,1,0)],
-                                  n=shapename)
+            newshape = cmds.curve(degree=1,
+                                  point=[(0,0,0), (1,1,0), (2,1,0), (2,2,0), (1,2,0), (1,1,0)],
+                                  name=shapename)
 
         elif shape in "starcircle":
-            newshape = cmds.circle(n=shapename, ch=0)
+            newshape = cmds.circle(n=shapename, constructionHistory=0)
             newshape = newshape[0]
-            cmds.select(d=1)
+            cmds.select(deselect=1)
             for x in range(0, 7)[::2]:
-                cmds.select(newshape + '.cv[{}]'.format(x), tgl=0, add=True)
-            cmds.selectMode(co=1)
-            cmds.xform(s=(.4, .4, .4))
-            cmds.selectMode(o=1)
+                cmds.select('{}.cv[{}]'.format(newshapex), toggle=0, add=True)
+            cmds.selectMode(component=1)
+            cmds.xform(scale=(.4, .4, .4))
+            cmds.selectMode(object=1)
             cmds.bakePartialHistory(newshape)
 
 
         elif shape in "scapctrl":
-            newshape = cmds.curve(d=1,
-                                  p=[(0,0,-2), (1,1,-2), (1,2,0), (1,1,2), (0,0,2),
+            newshape = cmds.curve(degree=1,
+                                  point=[(0,0,-2), (1,1,-2), (1,2,0), (1,1,2), (0,0,2),
                                      (-1,1,2), (-1,2,0), (-1,1,-2), (0,0,-2)],
-                                  n=shapename)
+                                  name=shapename)
         else:
             raise ValueError("Shape not recognised")
 
 
         # Scale, rotate, and transform new NURBS object
-        cmds.xform(newshape, s=scale, ro=rotation, t=position)
+        cmds.xform(newshape, scale=scale, rotation=rotation, translate=position)
 
         # Freeze transforms and bake control history
         cmds.makeIdentity(newshape, apply=1)
@@ -162,7 +162,7 @@ class BuildComponents(object):
 
 
         # Set controller colour
-        shapeshape = cmds.listRelatives(newshape, s=1, c=1)[0]
+        shapeshape = cmds.listRelatives(newshape, shapes=1, children=1)[0]
         cmds.setAttr(shapeshape + ".overrideEnabled", 1)
         if not colour:
             pass
@@ -175,7 +175,7 @@ class BuildComponents(object):
         cmds.parent(newshape, newgroup)
 
         # Deselect everything to make sure it doesn't mess with other parts of the code
-        cmds.select(d=1)
+        cmds.select(deselect=1)
 
         # Pass back out the name of the controller's group and controller itself
         return newgroup, newshape
@@ -184,35 +184,35 @@ class BuildComponents(object):
     def twopointnurbpatch(self, partname="",
                           startjnt="", endjnt=""):
         # Get start and end jnt's position and rotation
-        start_pos = cmds.xform(startjnt, ws=1, t=1, q=1)
-        start_rot = cmds.xform(startjnt, ws=1, ro=1, q=1)
-        end_pos = cmds.xform(endjnt, ws=1, t=1, q=1)
+        start_pos = cmds.xform(startjnt, query=True, translate=True, worldSpace=True)
+        start_rot = cmds.xform(startjnt, query=True, rotation=True, worldSpace=True)
+        end_pos = cmds.xform(endjnt, query=True, translate=True, worldSpace=True)
 
         mid_pos = self.vector_lerp(start_pos, end_pos, .5)
 
         for locator in ["Start", "Mid", "End"]:
             # For each item in list, create a locator and joint, and parent the joint to the locator
-            newloc = cmds.spaceLocator(n=partname + "_" + locator + "_LOC")
-            cmds.joint(n=partname + "_" + locator + "_JNT")
-            cmds.parent(newloc, partname + "_RIGJOINTS")
+            newloc = cmds.spaceLocator(name="{}_{}_LOC".format(partname, locator))
+            cmds.joint(name="{}_{}_JNT".format(partname, locator))
+            cmds.parent(newloc, "{}_RIGJOINTS".format(partname))
         startloc = partname + "_Start_LOC"
-        midloc = partname + "_Mid_LOC"
-        endloc = partname + "_End_LOC"
+        midloc =   partname + "_Mid_LOC"
+        endloc =   partname + "_End_LOC"
 
-        cmds.xform(startloc, t=start_pos, ro=start_rot, ws=1)
-        cmds.xform(midloc, t=mid_pos, ro=start_rot, ws=1)
-        cmds.xform(endloc, t=end_pos, ro=start_rot, ws=1)
+        cmds.xform(startloc, translate=start_pos, rotation=start_rot, worldSpace=True)
+        cmds.xform(midloc,   translate=mid_pos,   rotation=start_rot, worldSpace=True)
+        cmds.xform(endloc,   translate=end_pos,   rotation=start_rot, worldSpace=True)
 
         # Set joint orient for the start joint using a temporary joint placed at the end object location
-        tempjnt = cmds.joint(n="temp_JNT")
-        cmds.xform(tempjnt, t=end_pos, ws=1)
+        tempjnt = cmds.joint(name="temp_JNT")
+        cmds.xform(tempjnt, translate=end_pos, worldSpace=True)
         cmds.parent(tempjnt, partname + "_Start_JNT")
-        cmds.joint(partname + "_Start_JNT", e=1, oj="xyz")
+        cmds.joint(partname + "_Start_JNT", edit=True, orientJoint="xyz")
         cmds.delete(tempjnt)
 
         # Copy joint orient from start joint and apply to all subsequent joints
         for joint in ["Mid", "End"]:
-            cmds.joint(partname + "_" + joint + "_JNT", e=1, o=(cmds.joint(partname + "_Start_JNT", q=1, o=1)))
+            cmds.joint(partname + "_" + joint + "_JNT", edit=True, orientation=(cmds.joint(partname + "_Start_JNT", query=True, orientation=True)))
 
         # Create curve based on joint positions, then duplicate first joint and parent curve to joint
         for i, trans in zip(["A", "B"], [(0, 1, 0), (0, -1, 0)]):
