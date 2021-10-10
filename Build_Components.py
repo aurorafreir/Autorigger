@@ -56,7 +56,7 @@ class BuildComponents(object):
         # Create a follicle object, and attach it to the NURBS surface (nurbssurf)
         follicle = cmds.createNode('follicle')
 
-        follicle_parent = cmds.listRelatives(follicle, parent=1)[0]
+        follicle_parent = cmds.listRelatives(follicle, parent=True)[0]
         cmds.connectAttr("{}.local".format(nurbssurf), "{}.inputSurface".format(follicle))
         cmds.connectAttr("{}.worldMatrix[0]".format(nurbssurf), "{}.inputWorldMatrix".format(follicle))
         for name, n in zip(["Rotate", "Translate"], ["r", "t"]):
@@ -64,7 +64,7 @@ class BuildComponents(object):
         for uv, pos in zip(["U", "V"], [uPos, vPos]):
             cmds.setAttr("{}.parameter{}".format(follicle, uv), pos)
         for tr in ["t", "r"]:
-            cmds.setAttr("{}.{}".format(follicle_parent, tr), lock=1)
+            cmds.setAttr("{}.{}".format(follicle_parent, tr), lock=True)
 
         return follicle
 
@@ -107,64 +107,65 @@ class BuildComponents(object):
                           colour=""):
         # To be used by other parts of this script for creating a variety of controllers
         # Create empty group
-        newgroup = cmds.group(name="{}_GRP".format(part_name), empty=1)
+        newgroup = cmds.group(name="{}_GRP".format(part_name), empty=True)
         shapename = "{}_CTRL".format(part_name)
 
         if shape in "circle":
             # Create circle NURBS curve
-            newshape = cmds.circle(name=shapename, constructionHistory=0)
+            newshape = cmds.circle(name=shapename, constructionHistory=False)
             newshape = newshape[0] # Make sure that newshape is only a single string instead of [objectname,  shapename]
 
         elif shape in "square":
             # Create square NURBS curve
-            newshape = cmds.curve(degree=1, point=[(-.5, .5, 0), (.5, .5, 0), (.5, -.5, 0), (-.5, -.5, 0), (-.5, .5, 0)],
-                name=shapename)
+            newshape = cmds.curve(degree=1, 
+                                    point=[(-.5, .5, 0), (.5, .5, 0), (.5, -.5, 0), (-.5, -.5, 0), (-.5, .5, 0)],
+                                    name=shapename)
 
         elif shape in "cube":
             # Create cube NURBS curve
             newshape = cmds.curve(degree=1,
-                    point=[(-0.5, -0.5, .5), (-0.5, .5, .5), (.5, .5, .5), (.5, -0.5, .5), (.5, -0.5, -0.5), (.5, .5, -0.5),
-                       (-0.5, .5, -0.5), (-0.5, -0.5, -0.5), (.5, -0.5, -0.5), (.5, .5, -0.5), (.5, .5, .5),
-                       (-0.5, .5, .5), (-0.5, .5, -0.5), (-0.5, -0.5, -0.5), (-0.5, -0.5, .5), (.5, -0.5, .5)],
-               name=shapename)
+                                    point=[(-0.5, -0.5, .5), (-0.5, .5, .5), (.5, .5, .5), (.5, -0.5, .5), (.5, -0.5, -0.5), (.5, .5, -0.5),
+                                     (-0.5, .5, -0.5), (-0.5, -0.5, -0.5), (.5, -0.5, -0.5), (.5, .5, -0.5), (.5, .5, .5),
+                                     (-0.5, .5, .5), (-0.5, .5, -0.5), (-0.5, -0.5, -0.5), (-0.5, -0.5, .5), (.5, -0.5, .5)],
+                                    name=shapename)
 
         elif shape in "pointedsquare":
             newshape = cmds.curve(degree=1,
-                                  point=[(0,0,0), (1,1,0), (2,1,0), (2,2,0), (1,2,0), (1,1,0)],
-                                  name=shapename)
+                                    point=[(0,0,0), (1,1,0), (2,1,0), (2,2,0), (1,2,0), (1,1,0)],
+                                    name=shapename)
 
         elif shape in "starcircle":
-            newshape = cmds.circle(n=shapename, constructionHistory=0)
+            newshape = cmds.circle(name=shapename, constructionHistory=False)
             newshape = newshape[0]
-            cmds.select(deselect=1)
+            cmds.select(deselect=True)
             for x in range(0, 7)[::2]:
-                cmds.select('{}.cv[{}]'.format(newshapex), toggle=0, add=True)
-            cmds.selectMode(component=1)
+                cmds.select('{}.cv[{}]'.format(newshape, x), toggle=False, add=True)
+            cmds.selectMode(component=True)
             cmds.xform(scale=(.4, .4, .4))
-            cmds.selectMode(object=1)
+            cmds.selectMode(object=True)
             cmds.bakePartialHistory(newshape)
 
 
         elif shape in "scapctrl":
             newshape = cmds.curve(degree=1,
-                                  point=[(0,0,-2), (1,1,-2), (1,2,0), (1,1,2), (0,0,2),
+                                    point=[(0,0,-2), (1,1,-2), (1,2,0), (1,1,2), (0,0,2),
                                      (-1,1,2), (-1,2,0), (-1,1,-2), (0,0,-2)],
-                                  name=shapename)
+                                    name=shapename)
         else:
-            raise ValueError("Shape not recognised")
+            raise ValueError("Shape {} not recognised".format(shape))
 
 
         # Scale, rotate, and transform new NURBS object
         cmds.xform(newshape, scale=scale, rotation=rotation, translate=position)
 
         # Freeze transforms and bake control history
-        cmds.makeIdentity(newshape, apply=1)
+        cmds.makeIdentity(newshape, applyTrue)
         cmds.bakePartialHistory(newshape)
 
 
         # Set controller colour
-        shapeshape = cmds.listRelatives(newshape, shapes=1, children=1)[0]
-        cmds.setAttr("{}.overrideEnabled".format(shapeshape), 1)
+        shapeshape = cmds.listRelatives(newshape, shapes=True, children=True)[0]
+        cmds.setAttr("{}.overrideEnabled".format(shapeshape), True)
         if not colour:
             pass
         elif colour in "blue":
@@ -176,7 +177,7 @@ class BuildComponents(object):
         cmds.parent(newshape, newgroup)
 
         # Deselect everything to make sure it doesn't mess with other parts of the code
-        cmds.select(deselect=1)
+        cmds.select(deselect=True)
 
         # Pass back out the name of the controller's group and controller itself
         return newgroup, newshape
@@ -186,8 +187,8 @@ class BuildComponents(object):
                           startjnt="", endjnt=""):
         # Get start and end jnt's position and rotation
         start_pos = cmds.xform(startjnt, query=True, translate=True, worldSpace=True)
-        start_rot = cmds.xform(startjnt, query=True, rotation=True, worldSpace=True)
-        end_pos = cmds.xform(endjnt, query=True, translate=True, worldSpace=True)
+        start_rot = cmds.xform(startjnt, query=True, rotation=True,  worldSpace=True)
+        end_pos =   cmds.xform(endjnt,   query=True, translate=True, worldSpace=True)
 
         mid_pos = self.vector_lerp(start_pos, end_pos, .5)
 
@@ -214,32 +215,32 @@ class BuildComponents(object):
 
         # Copy joint orient from start joint and apply to all subsequent joints
         for joint in ["Mid", "End"]:
-            cmds.joint(part_name + "_" + joint + "_JNT", edit=True, orientation=(cmds.joint(part_name + "_Start_JNT", query=True, orientation=True)))
+            cmds.joint("{}_{}_JNT".format(part_name, joint), edit=True, orientation=(cmds.joint("{}_Start_JNT".format(part_name), query=True, orientation=True)))
 
         # Create curve based on joint positions, then duplicate first joint and parent curve to joint
         for i, trans in zip(["A", "B"], [(0, 1, 0), (0, -1, 0)]):
-            newcrv = cmds.curve(n=part_name + "_" + i + "_CrvTemp", d=1,
-                                p=[start_pos,
+            newcrv = cmds.curve(name="{}_{}_CrvTemp".format(part_name, i), degree=1,
+                                point=[start_pos,
                                    self.vector_lerp(start_pos, end_pos, .25),
                                    self.vector_lerp(start_pos, end_pos, .50),
                                    self.vector_lerp(start_pos, end_pos, .75),
                                    end_pos])
-            newjnt = cmds.duplicate(part_name + "_Start_JNT", n=part_name + "_" + i + "_JNT")
+            newjnt = cmds.duplicate("{}_Start_JNT".format(part_name), name="{}_{}_JNT".format(part_name, i))
             cmds.parent(newcrv, newjnt)
-            cmds.parent(newjnt, w=1)
+            cmds.parent(newjnt, world=True)
             # Move both joints 1 unit away from each other in +y and -y
-            cmds.xform(newjnt[0], t=trans, r=1, os=1)
+            cmds.xform(newjnt[0], translate=trans, relative=True, objectSpace=True)
 
         # Loft the two curves to create a NURBS surface
-        nrbpatch = cmds.loft(part_name+ "_A_CrvTemp", part_name + "_B_CrvTemp", n=part_name + "_NRB")
+        nrbpatch = cmds.loft("{}_A_CrvTemp".format(part_name), "{}_B_CrvTemp".format(part_name), name="{}_NRB".format(part_name))
         nrbpatch = cmds.bakePartialHistory(nrbpatch)
 
         # Rebuild the surface to be smooth rather than faceted
-        cmds.rebuildSurface(nrbpatch, rpo=1)
+        cmds.rebuildSurface(nrbpatch, replaceOriginal=True)
 
         # Delete two temporary curves, as they aren't needed any more
         for i in ["A", "B"]:
-            cmds.delete(part_name + "_" + i + "_JNT")
+            cmds.delete("{}_{}_JNT".format(part_name, i))
 
         return nrbpatch, (startloc, midloc, endloc)
 
@@ -254,14 +255,13 @@ class BuildComponents(object):
         for joint in range(0, maxjntcount):
             if 1 < joint < (maxjntcount-1):
                 rbnjnts.append(tempjnt[0])
-                tempjnt = cmds.listRelatives(tempjnt, p=1)
+                tempjnt = cmds.listRelatives(tempjnt, parent=True)
                 if tempjnt[0] == startjnt:
                     break
             elif joint == maxjntcount-1:
-                print("Could not find " + startjnt + " during this loop, check that it is correctly named")
-                break
+                raise Exception("Could not find {} during this loop, check that it is correctly named".format(startjnt))
             elif joint == 0:
-                tempjnt = cmds.listRelatives(endjnt, p=1)
+                tempjnt = cmds.listRelatives(endjnt, parent=True)
 
         rbnjnts.append(startjnt)
 
@@ -273,24 +273,24 @@ class BuildComponents(object):
         # Append each joints' positions to rbnjntspos
         rbnjntspos = []
         for joint in rbnjnts:
-            rbnjntspos.append(cmds.xform(joint, t=1, q=1, ws=1))
+            rbnjntspos.append(cmds.xform(joint, query=True, translate=True, worldSpace=True))
 
         for i, trans in zip(["A", "B"], [(0, 1, 0), (0, -1, 0)]):
-            newcrv = cmds.curve(n=part_name + "_" + i + "_CrvTemp", d=1, p=rbnjntspos)
-            cmds.select(d=1)
-            newjnt = cmds.duplicate(part_name + "_1_JNT", n=part_name + "_" + i + "_JNT", po=1)
+            newcrv = cmds.curve(name="{}_{}_CrvTemp".format(part_name, i), degree=1, p=rbnjntspos)
+            cmds.select(deselect=True)
+            newjnt = cmds.duplicate("{}_1_JNT".format(part_name), name="{}_{}_JNT".format(part_name, i), parentOnly=True)
             cmds.parent(newcrv, newjnt)
-            cmds.parent(newjnt, w=1)
+            cmds.parent(newjnt, world=True)
             # Move both joints 1 unit away from each other in +y and -y
-            cmds.xform(newjnt, t=trans, r=1, os=1)
+            cmds.xform(newjnt, translate=trans, relative=True, objectSpace=True)
 
         # Loft the two curves to create a NURBS surface
-        nrbpatch = cmds.loft(part_name + "_A_CrvTemp", part_name + "_B_CrvTemp", n=part_name + "_NRB")
+        nrbpatch = cmds.loft("{}_A_CrvTemp".format(part_name), "{}_B_CrvTemp".format(part_name), name="{}_NRB".format(part_name)
         nrbpatch = cmds.bakePartialHistory(nrbpatch)
 
         # Delete two temporary curves, as they aren't needed any more
-        for i in ["A", "B"]:
-            cmds.delete(part_name + "_" + i + "_JNT")
+        for crv in ["A", "B"]:
+            cmds.delete("{}_{}_JNT".format(part_name, crv))
 
         return nrbpatch, rbnjntscount
 
@@ -301,9 +301,9 @@ class BuildComponents(object):
                      skin=True, reverse=False):
         # To be used by other parts of this script or externally for creating ribbon rigs
         # Create a group for the current ribbon setup, and make some child groups for it
-        rbngrp = cmds.group(n=part_name + "_RBN_Rig", em=1)
+        rbngrp = cmds.group(n="{}_RBN_Rig".format(part_name), empty=True)
         for group in ["FOLLICLES", "RIGJOINTS"]:
-            cmds.group(n=part_name + "_" + group, p=part_name + "_RBN_Rig", em=1)
+            cmds.group(name="{}_{}".format(part_name, group), parent="{}_RBN_Rig".format(part_name), empty=True)
         if method == "twoloc":
             nrbpatch = self.twopointnurbpatch(part_name=part_name,
                                               startjnt=startjnt, endjnt=endjnt)
@@ -313,7 +313,7 @@ class BuildComponents(object):
                                                 reverse=reverse)
             bindjointcount = nrbpatch[1]
 
-        cmds.parent(nrbpatch[0], part_name + "_RBN_Rig")
+        cmds.parent(nrbpatch[0], "{}_RBN_Rig".format(part_name))
 
         rbnjoints = []
 
@@ -324,12 +324,12 @@ class BuildComponents(object):
             # Create follicle on the nurbs surface using the create_follicle function
             # Then rename it and parent it to the FOLLICLES group
             follicle = self.create_follicle(nrbpatch[0][0], 0.5, i / (bindjointcount - 1.00))
-            follicle = cmds.listRelatives(follicle, p=1)
-            newfol = cmds.rename(follicle, part_name + "_" + str(foll_cur_name) + "_FLC")
+            follicle = cmds.listRelatives(follicle, parentranslate=True)
+            newfol = cmds.rename(follicle, "{}_{}_FLC".format(part_name, str(foll_cur_name))
             cmds.parent(newfol, flcgrp)
 
             # Create joint for follicle and parent to follicle
-            jnt = cmds.joint(n=newfol.replace("_FLC", "_Connect_JNT"))
+            jnt = cmds.joint(name=newfol.replace("_FLC", "_Connect_JNT"))
             rbnjoints.append(jnt)
             foll_cur_name = foll_cur_name + 1
 
@@ -337,29 +337,31 @@ class BuildComponents(object):
         if skin:
             # Create a list of the joints to be used for skinning the nrb surface
             rbnskinjoints = [
-                part_name + "_Start_JNT", part_name + "_End_JNT", part_name + "_Mid_JNT"
+                "{}_Start_JNT".format(part_name), 
+                "{}_End_JNT".format(part_name), 
+                "{}_Mid_JNT".format(part_name)
             ]
 
             # Apply a skinCluster to the nrb surface using the joints in rbnskinjoints
-            cmds.skinCluster(rbnskinjoints, nrbpatch[0], n=part_name + "_RBN_SkinCluster")
+            cmds.skinCluster(rbnskinjoints, nrbpatch[0], name="{}_RBN_SkinCluster".format(part_name))
 
         cmds.hide(rbngrp)
-        for i in [rbngrp, flcgrp]:
-            self.lockhideattr(i, hide=False)
-        self.lockhideattr(part_name + "_RIGJOINTS", translate=False, rotate=False, hide=False)
+        for part in [rbngrp, flcgrp]:
+            self.lockhideattr(part, hide=False)
+        self.lockhideattr("{}_RIGJOINTS".format(part_name), translate=False, rotate=False, hide=False)
 
         # Deselect everything to make sure it doesn't mess with other parts of the code
-        cmds.select(d=1)
+        cmds.select(deselect=True)
 
         return nrbpatch[1], rbnjoints, rbngrp
 
 
     def character_setup(self):
         # Create character's group setup
-        pgroup = self.char_name + "_CharacterRig"
+        pgroup = "{}_CharacterRig".format(self.char_name)
         # If the group does not exist, create one
         if not cmds.ls(pgroup):
-            parentgroup = cmds.group(n=pgroup, em=1)
+            parentgroup = cmds.group(name=pgroup, empty=True)
         else:
             parentgroup = pgroup
         self.lockhideattr(pgroup, hide=False)
@@ -367,10 +369,10 @@ class BuildComponents(object):
         # Create the sub-groups for the main group
         for group in ["Meshes", "BindJoints", "Rig"]:
             if not cmds.ls(self.char_name + "_" + group):
-                newgrp = cmds.group(n=self.char_name + "_" + group, p=parentgroup, em=1)
+                newgrp = cmds.group(name="{}_{}".format(self.char_name, group), parent=parentgroup, empty=True)
                 self.lockhideattr(newgrp, hide=False)
 
-        main_rig_group = self.char_name + "_Rig"
+        main_rig_group = "{}_Rig".format(self.char_name)
 
         # Create root control at 0,0,0 and parent it to the _Rig group
         rootgroup = self.controllers_setup(part_name="Root", scale=(40,40,40), rotation=(90,0,0))
@@ -382,15 +384,16 @@ class BuildComponents(object):
         # Create 3 display layers, one each for Meshes, Joints, and Controls
         displayers = []
         for dl in ["Meshes", "Joints", "Controls"]:
-            if not cmds.ls(dl + "_Disp"):
-                cmds.createDisplayLayer(n=dl + "_Disp", e=1)
-            displayers.append(dl + "_Disp")
+            dl_name = "{}_Disp".format(dl)
+            if not cmds.ls(dl_name):
+                cmds.createDisplayLayer(name=dl_name, empty=True)
+            displayers.append(dl_name)
 
         # Add Root_CTRL to Controls display layer
         cmds.editDisplayLayerMembers(displayers[2], rootgroup[1])
 
         # Deselect everything to make sure it doesn't mess with other parts of the code
-        cmds.select(d=1)
+        cmds.select(deselect=True)
 
         class CharSetup:
             def __init__(self, rootgroup, main_rig_group, displayers):
@@ -412,14 +415,14 @@ class BuildComponents(object):
         for joint in range(0,21):
             if 1 < joint < 20:
                 spinejnts.append(tempjnt[0])
-                tempjnt = cmds.listRelatives(tempjnt, p=1)
+                tempjnt = cmds.listRelatives(tempjnt, parent=True)
                 if tempjnt[0] == startjnt:
                     break
             elif joint == 20:
-                print("Could not find " + startjnt + " during this loop, check that it is correctly named")
+                print("Could not find {} during this loop, check that it is correctly named".format(startjnt))
                 break
             elif joint == 0:
-                tempjnt = cmds.listRelatives(endjnt, p=1)
+                tempjnt = cmds.listRelatives(endjnt, parent=True)
 
         spinejnts.append(startjnt)
 
@@ -434,13 +437,13 @@ class BuildComponents(object):
         # Create a control for the Hips at the Ct_Hips_JNT location
         hipsgrp =  self.controllers_setup(part_name="Hips", shape="cube",
                                           scale=(50,5,40) * scale, rotation=rotation)
-        cmds.xform(hipsgrp[0], ws=1, t= cmds.xform(startjnt, ws=1, t=1,  q=1))
-        cmds.xform(hipsgrp[0], ws=1, ro=cmds.xform(startjnt, ws=1, ro=1, q=1))
+        cmds.xform(hipsgrp[0], worldSpace=True, translate=cmds.xform(startjnt, worldSpace=True, translate=True, query=True)) # TODO reformat these to be oredered correctly
+        cmds.xform(hipsgrp[0], worldSpace=True, rotation= cmds.xform(startjnt, worldSpace=True, rotation=True,  query=True))
         # Create a control for the Chest bend at the position of the middle locator from the ribbon
         chestgrp = self.controllers_setup(part_name="Chest", shape="cube",
                                           scale=(50,5,40), rotation=rotation)
-        cmds.xform(chestgrp[0], ws=1, t= cmds.xform(spinerbnlocs[0][1], ws=1, t=1,  q=1))
-        cmds.xform(chestgrp[0], ws=1, ro=cmds.xform(spinerbnlocs[0][1], ws=1, ro=1, q=1))
+        cmds.xform(chestgrp[0], worldSpace=True, translate=cmds.xform(spinerbnlocs[0][1], worldSpace=True, translate=True, query=True))
+        cmds.xform(chestgrp[0], worldSpace=True, rotation= cmds.xform(spinerbnlocs[0][1], worldSpace=True, rotation=True,  query=True))
 
         self.lockhideattr(hipsgrp[1], translate=False, rotate=False)
         self.lockhideattr(chestgrp[1], rotate=False)
@@ -449,22 +452,22 @@ class BuildComponents(object):
         cmds.parent(chestgrp[0], hipsgrp[1])
 
         # Move the chest Ctrl's pivot to the position of the first spine joint
-        cmds.xform(chestgrp[1], piv=(cmds.xform(spinejnts[0], q=1, ws=1, t=1)), ws=1)
+        cmds.xform(chestgrp[1], piv=(cmds.xform(spinejnts[0], query=True, worldSpace=True, translate=True)), worldSpace=True)
 
         # Parent constrain the controllers to the ribbon's locators
         # Parent constrain the Hips_CTRL to the first locator on the spine ribbon
-        cmds.parentConstraint(hipsgrp[1], spinerbnlocs[0][0], mo=1)
+        cmds.parentConstraint(hipsgrp[1], spinerbnlocs[0][0], maintainOffset=True)
         # Parent constrain the Chest_CTRL to the second locator on the spine ribbon
-        cmds.parentConstraint(spinerbnlocs[0][0], spinerbnlocs[0][2], spinerbnlocs[0][1], mo=1)
+        cmds.parentConstraint(spinerbnlocs[0][0], spinerbnlocs[0][2], spinerbnlocs[0][1], maintainOffset=True)
         # Parent constrain the Chest_CTRL to the third locator on the spine ribbon
-        cmds.parentConstraint(chestgrp[1], spinerbnlocs[0][2], mo=1)
+        cmds.parentConstraint(chestgrp[1], spinerbnlocs[0][2], maintainOffset=True)
 
         # Parent constrain ribbon joints to bind joints
         for bindjnt, connectjnt in zip(spinejnts, spinerbnlocs[1]):
-            cmds.parentConstraint(connectjnt, bindjnt, mo=1)
+            cmds.parentConstraint(connectjnt, bindjnt, maintainOffset=True)
 
         # Deselect everything to make sure it doesn't mess with other parts of the code
-        cmds.select(d=1)
+        cmds.select(deselect=True)
 
         class Spine:
             def __init__(self, hipsgrp, chestgrp):
@@ -483,21 +486,21 @@ class BuildComponents(object):
                                          scale=(10,10,10) * scale,
                                          rotation=rotation,
                                          position=position)
-        neckpos = cmds.xform(neckjnt, q=1, ws=1,  t=1)
-        neckrot = cmds.xform(neckjnt, q=1, ws=1, ro=1)
-        cmds.xform(neckgrp, ws=1, t=neckpos, ro=neckrot)
+        neckpos = cmds.xform(neckjnt, query=True, translate=True, worldSpace=True)
+        neckrot = cmds.xform(neckjnt, query=True, rotation=True,  worldSpace=True)
+        cmds.xform(neckgrp, translate=neckpos, rotation=neckrot, worldSpace=True)
 
         # Make sure that the controller's pivot is where the Neck joint is
-        cmds.xform(neckgrp[1], piv=(cmds.xform(neckjnt, q=1, ws=1, t=1)), ws=1)
+        cmds.xform(neckgrp[1], pivot=(cmds.xform(neckjnt, query=True, translate=True, worldSpace=True)), worldSpace=True)
 
         # Parent constrain the neck controller to the neck joint
-        cmds.parentConstraint(neckgrp[1], neckjnt, mo=1)
+        cmds.parentConstraint(neckgrp[1], neckjnt, maintainOffset=True)
 
         # Lock and hide all attrs other than rotation
         self.lockhideattr(neckgrp[1], rotate=False)
 
         # Deselect everything to make sure it doesn't mess with other parts of the code
-        cmds.select(d=1)
+        cmds.select(deselect=True)
 
 
         class Neck:
@@ -518,19 +521,22 @@ class BuildComponents(object):
             side="Lf"
             colour="yellow"
 
+        # TODO check this works
+        elbow_jnt = cmds.listRelatives(wristjnt, p=1)[0] 
+
         # Create a group for the overall arm setup
-        armgrp = cmds.group(n=side + "_Arm", p=self.char_name + "_Rig", em=1)
+        armgrp = cmds.group(name="{}_Arm".format(side), parent="{}_Rig".format(self.char_name), empty=True)
         self.lockhideattr(armgrp, hide=False)
 
         # FKIK SETUP
 
         # Duplicate shoulder setup and rename all joints under it and including itself
-        fkikgrp = cmds.group(n=side + "_Arm_FKIK", p=armgrp, em=1)
+        fkikgrp = cmds.group(name="{}_Arm_FKIK".format(side), parent=armgrp, empty=True)
         cmds.hide(fkikgrp)
         self.lockhideattr(fkikgrp, hide=False)
-        shouldupl = cmds.duplicate(shouljnt, n=shouljnt.replace("_JNT", "_Connect_JNT"))
+        shouldupl = cmds.duplicate(shouljnt, name=shouljnt.replace("_JNT", "_Connect_JNT"))
         cmds.parent(shouldupl[0], fkikgrp)
-        for childjnt in cmds.listRelatives(shouldupl[0], c=1, ad=1, f=1):
+        for childjnt in cmds.listRelatives(shouldupl[0], children=True, allDescendents=True, fullPath=True):
             # Rename each child joint to have the same _Connect_JNT naming
             # The split("|")[-1] is to select the last part of the fullpath object name, convert
             #       to string, and then replace the name
@@ -539,15 +545,15 @@ class BuildComponents(object):
         # Create a list with the _Connect_JNT joints in it
         connectjnts = []
         for jnt in range(0,3):
-            connectjnts.append(side + "_Arm_" + str(jnt) + "_Connect_JNT")
+            connectjnts.append("{}_Arm_{}_Connect_JNT".format(side, str(jnt)))
 
         # Delete unneeded joints
-        cmds.delete(cmds.listRelatives(wristjnt.replace("_JNT", "_Connect_JNT"), c=1, f=1)[0])
+        cmds.delete(cmds.listRelatives(wristjnt.replace("_JNT", "_Connect_JNT"), children=True, fullPath=True)[0])
 
         # Duplicate twice for FK and IK joint chains
         for ikfk in ["FK", "IK"]:
             newshoul = cmds.duplicate(shouldupl[0], n=shouldupl[0].replace("_Connect_JNT", "_" + ikfk + "_JNT"))
-            for childjnt in cmds.listRelatives(newshoul[0], c=1, ad=1, f=1):
+            for childjnt in cmds.listRelatives(newshoul[0], children=True, allDescendents=True, fullPath=True):
                 # Rename each child joint to have the same _IKFK_JNT naming
                 cmds.rename(childjnt, str(childjnt.split("|")[-1]).replace("_Connect_JNT", "_" + ikfk + "_JNT"))
 
@@ -555,7 +561,7 @@ class BuildComponents(object):
         cmds.parentConstraint(shouljnt.replace("_JNT", "_FK_JNT"),
                               shouljnt.replace("_JNT", "_IK_JNT"),
                               shouljnt.replace("_JNT", "_Connect_JNT"))
-        for jnts in [cmds.listRelatives(wristjnt, p=1)[0], wristjnt]:
+        for jnts in [cmds.listRelatives(wristjnt, parent=True)[0], wristjnt]:
             cmds.orientConstraint(jnts.replace("_JNT", "_FK_JNT"),
                                   jnts.replace("_JNT", "_IK_JNT"),
                                   jnts.replace("_JNT", "_Connect_JNT"))
@@ -567,10 +573,10 @@ class BuildComponents(object):
         scapulagrp = self.controllers_setup(part_name=side + "_Scapula", shape="scapctrl",
                                             position=(14,0,0), scale=(4,4,4),
                                             colour=colour)
-        cmds.xform(scapulagrp[0], t=cmds.xform(scapjnt, q=1, t=1, ws=1), ws=1)
+        cmds.xform(scapulagrp[0], translate=cmds.xform(scapjnt, query=True, translate=True, worldSpace=True), worldSpace=True)
         if flipped:
-            cmds.xform(scapulagrp[0], s=(-1,1,1))
-        cmds.xform(scapulagrp[1], piv=(cmds.xform(scapjnt, q=1, t=1, ws=1)), ws=1)
+            cmds.xform(scapulagrp[0], scale=(-1,1,1))
+        cmds.xform(scapulagrp[1], pivot=(cmds.xform(scapjnt, query=True, translate=True, worldSpace=True)), worldSpace=True)
 
         self.lockhideattr(scapulagrp[1], rotate=False)
         self.lockhideattr(scapulagrp[0], translate=False, rotate=False)
@@ -578,13 +584,13 @@ class BuildComponents(object):
 
         # Create a locator parented to the scapula in the position of the shouljnt
         shoulloc = cmds.spaceLocator(n=side + "_Scapula_Shoulder_LOC")
-        cmds.xform(shoulloc, t=(cmds.xform(shouljnt, t=1, q=1, ws=1)), ws=1)
+        cmds.xform(shoulloc, t=(cmds.xform(shouljnt, query=True, translate=True, worldSpace=True)), worldSpace=True)
         cmds.parent(shoulloc[0], scapulagrp[1])
         cmds.setAttr(shoulloc[0] + ".visibility", 0)
         self.lockhideattr(shoulloc[0])
 
         # Scapula ctrl to scapula jnt constraint
-        cmds.parentConstraint(scapulagrp[1], scapjnt, mo=1)
+        cmds.parentConstraint(scapulagrp[1], scapjnt, maintainOffset=True)
 
         # Parent scapula group to the arm group
         cmds.parent(scapulagrp[0], armgrp)
@@ -594,18 +600,18 @@ class BuildComponents(object):
 
         # Create pointedsquare control and position at shoulder location
         if flipped:
-            armattrsgrp = self.controllers_setup(part_name=side + "_Arm_Attrs", shape="pointedsquare",
+            armattrsgrp = self.controllers_setup(part_name="{}_Arm_Attrs".format(side), shape="pointedsquare",
                                                  scale=(-6,6,6), colour=colour)
         else:
-            armattrsgrp = self.controllers_setup(part_name=side + "_Arm_Attrs", shape="pointedsquare",
+            armattrsgrp = self.controllers_setup(part_name="{}_Arm_Attrs".format(side), shape="pointedsquare",
                                                  scale=(6,6,6), colour=colour)
-        cmds.xform(armattrsgrp, t=(cmds.xform(shoulloc, t=1, q=1, ws=1)), ws=1)
+        cmds.xform(armattrsgrp, translate=(cmds.xform(shoulloc, query=True, translate=True, worldSpace=True)), worldSpace=True)
 
         # Parent arm attrs group to arm group
         cmds.parent(armattrsgrp[0], armgrp)
 
         # Parent constrain arm attrs group to the scapula's
-        cmds.parentConstraint(shoulloc[0], armattrsgrp[0], mo=1)
+        cmds.parentConstraint(shoulloc[0], armattrsgrp[0], maintainOffset=True)
 
         self.lockhideattr(armattrsgrp[1])
         self.lockhideattr(armattrsgrp[0], translate=False, rotate=False)
@@ -613,41 +619,44 @@ class BuildComponents(object):
 
         # Create FKIK, and space switching attributes for each arm
         cmds.select(armattrsgrp[1])
-        cmds.addAttr(sn="FKIK", ln="FKIK", min=0, max=1, dv=0, ex=1, h=0, k=1)
-        cmds.addAttr(sn="Pos_SS", ln="Position_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
-        cmds.addAttr(sn="Rot_SS", ln="Rotation_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
-        cmds.select(d=1)
+        cmds.addAttr(shortName="FKIK", longName="FKIK", min=0, max=1, dv=0, exists=True, hidden=False, keyable=True)
+
+        # TODO Edit this to make it global
+
+        cmds.addAttr(shortName="Pos_SS", longName="Position_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
+        cmds.addAttr(shortName="Rot_SS", longName="Rotation_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
+        cmds.select(deselect=True)
 
         # FKIK switching setup
         # Create math node to reverse (1 - fkikattr)
-        fkikreverse = cmds.createNode("floatMath", n=side + "_Arm_FKIK_Reverse_FM")
-        cmds.setAttr(fkikreverse + ".operation", 1)
-        cmds.connectAttr(armattrsgrp[1] + ".FKIK", fkikreverse + ".floatB")
+        fkikreverse = cmds.createNode("floatMath", name="{}_Arm_FKIK_Reverse_FM".format(side))
+        cmds.setAttr("{}.operation".format(fkikreverse), 1)
+        cmds.connectAttr("{}.FKIK".format(armattrsgrp[1]), "{}.floatB".format(fkikreverse))
 
-        for connectjnt in [shouljnt, cmds.listRelatives(wristjnt, p=1)[0], wristjnt]:
+        for connectjnt in [shouljnt, elbow_jnt, wristjnt]:
             if connectjnt in shouljnt:
                 ocpc = "parent"
             else:
                 ocpc = "orient"
-            constraint = connectjnt.replace("_JNT", "_Connect_JNT") + "_" + ocpc + "Constraint1"
-            cmds.connectAttr(armattrsgrp[1] + ".FKIK", constraint + "." + connectjnt.replace("_JNT", "_IK_JNT") + "W1")
-            cmds.connectAttr(fkikreverse + ".outFloat", constraint + "." + connectjnt.replace("_JNT", "_FK_JNT") + "W0")
+            constraint = "{}_{}Constraint1".format(connectjnt.replace("_JNT", "_Connect_JNT"), ocpc)
+            cmds.connectAttr("{}.FKIK".format(armattrsgrp[1]), "{}.{}W1".format(constraint, connectjnt.replace("_JNT", "_IK_JNT")))
+            cmds.connectAttr("{}.outFloat".format(fkikreverse), "{}.{}W0".format(constraint, connectjnt.replace("_JNT", "_FK_JNT")))
 
 
         # IK SETUP
         # Check that the IK shoulder joint's Preffered Angle is 0,0,0
             for xyz in ["X", "Y", "Z"]:
-                cmds.setAttr(connectjnt.replace("_JNT", "_IK_JNT") + ".preferredAngle" + xyz, 0)
+                cmds.setAttr("{}.preferredAngle{}".format(connectjnt.replace("_JNT", "_IK_JNT"), xyz), 0)
 
         # Create an IK handle for the IK joints
-        arm_ikh = cmds.ikHandle(sj=shouljnt.replace("_JNT", "_IK_JNT"), ee=wristjnt.replace("_JNT", "_IK_JNT"), n=side + "_Arm_IK_IKH")
+        arm_ikh = cmds.ikHandle(startJoint=shouljnt.replace("_JNT", "_IK_JNT"), endEffector=wristjnt.replace("_JNT", "_IK_JNT"), name="{}_Arm_IK_IKH".format(side))
         cmds.hide(arm_ikh)
 
         # Parent IK handle to the arm group
         cmds.parent(arm_ikh[0], armgrp)
 
         # Parent constrain Connect joints to bind joints
-        for connectjnt in [shouljnt, cmds.listRelatives(wristjnt, p=1)[0], wristjnt]:
+        for connectjnt in [shouljnt, elbow_jnt, wristjnt]:
             cmds.parentConstraint(connectjnt.replace("_JNT", "_Connect_JNT"), connectjnt)
 
 
@@ -655,11 +664,11 @@ class BuildComponents(object):
         # FK Controls
         fkctrls = []
         fkgrps = []
-        for fkjoint in [shouljnt, cmds.listRelatives(wristjnt, p=1)[0], wristjnt]:
+        for fkjoint in [shouljnt, elbow_jnt, wristjnt]:
             fkgrp = self.controllers_setup(part_name=fkjoint.replace("_JNT", "_FK"), shape="circle",
                                            colour=colour, scale=(6,6,6),
                                            rotation=(0,90,0))
-            cmds.xform(fkgrp[0], t=(cmds.xform(fkjoint, t=1, q=1, ws=1)), ro=(cmds.xform(fkjoint, ro=1, q=1, ws=1)), ws=1)
+            cmds.xform(fkgrp[0], translate=(cmds.xform(fkjoint, query=True, translate=True, worldSpace=True)), rotation=(cmds.xform(fkjoint, query=True, rotation=True, worldSpace=True)), worldSpace=True)
             cmds.parentConstraint(fkgrp[1], fkjoint.replace("_JNT", "_FK_JNT"))
 
             if fkjoint == shouljnt:
@@ -673,10 +682,10 @@ class BuildComponents(object):
             fkctrls.append(fkgrp[1])
 
         # Parent constrain FK shoulder to Scapula
-        cmds.parentConstraint(scapulagrp[1], shouljnt.replace("_JNT", "_FK_GRP"), mo=1)
+        cmds.parentConstraint(scapulagrp[1], shouljnt.replace("_JNT", "_FK_GRP"), maintainOffset=True)
 
         # Point constrain Shoulder IK joint to Scapula
-        cmds.pointConstraint(shoulloc, shouljnt.replace("_JNT", "_IK_JNT"), mo=1)
+        cmds.pointConstraint(shoulloc, shouljnt.replace("_JNT", "_IK_JNT"), maintainOffset=True)
 
         # Set vis for Shoulder FK group based on FKIK attr
         cmds.connectAttr(fkikreverse + ".outFloat", shouljnt.replace("_JNT", "_FK_GRP") + ".visibility")
@@ -691,8 +700,8 @@ class BuildComponents(object):
         ikgrp = self.controllers_setup(part_name=side + "_Arm_IK", shape="starcircle",
                                        colour=colour, scale=(6,6,6),
                                        rotation=(0,90,0))
-        cmds.xform(ikgrp[0], t=(cmds.xform(wristjnt.replace("_JNT", "_IK_JNT"), t=1, q=1, ws=1)),
-                   ro=(cmds.xform(wristjnt.replace("_JNT", "_IK_JNT"), ro=1, q=1, ws=1)), ws=1)
+        cmds.xform(ikgrp[0], t=(cmds.xform(wristjnt.replace("_JNT", "_IK_JNT"), translate=True, query=True, worldSpace=True)),
+                   ro=(cmds.xform(wristjnt.replace("_JNT", "_IK_JNT"), rotation=True, query=True, worldSpace=True)), worldSpace=True)
         cmds.parentConstraint(ikgrp[1], arm_ikh[0])
         cmds.orientConstraint(ikgrp[1], wristjnt.replace("_JNT", "_IK_JNT"))
         cmds.parent(ikgrp[0], armgrp)
@@ -706,12 +715,12 @@ class BuildComponents(object):
                                        colour=colour, scale=(6,6,6),
                                        rotation=(0,0,0))
         cmds.xform(pvgrp[0],
-                   t=(self.vector_lerp(cmds.xform(shouljnt.replace("_JNT", "_IK_JNT"), q=1, t=1, ws=1),
-                                       cmds.xform(wristjnt.replace("_JNT", "_IK_JNT"), q=1, t=1, ws=1),
-                                       .5)), ws=1)
-        tempaimconst = cmds.aimConstraint((cmds.listRelatives(wristjnt, p=1)[0]).replace("_JNT", "_IK_JNT"), pvgrp[0])
+                   t=(self.vector_lerp(cmds.xform(shouljnt.replace("_JNT", "_IK_JNT"), query=True, translate=True, worldSpace=True),
+                                       cmds.xform(wristjnt.replace("_JNT", "_IK_JNT"), query=True, translate=True, worldSpace=True),
+                                       .5)), worldSpace=True)
+        tempaimconst = cmds.aimConstraint((elbow_jnt).replace("_JNT", "_IK_JNT"), pvgrp[0])
         cmds.delete(tempaimconst)
-        cmds.xform(pvgrp[0], t=(50,0,0), r=1, os=1)
+        cmds.xform(pvgrp[0], translate=(50,0,0), relative=True, objectSpace=True)
 
         cmds.parent(pvgrp[0], armgrp)
 
@@ -734,8 +743,8 @@ class BuildComponents(object):
 
         # Create locators for each of the input objects at their 0,0,0
         for obj in constraints:
-            loc = cmds.spaceLocator(n=side + "_" +obj + "_SS_LOC")[0]
-            cmds.xform(loc, t=cmds.xform(ikgrp[1], q=1, t=1, ws=1), ws=1)
+            loc = cmds.spaceLocator(n="{}_{}_SS_LOC".format(side, obj))[0]
+            cmds.xform(loc, translate=cmds.xform(ikgrp[1], query=True, translate=True, worldSpace=True), worldSpace=True)
             cmds.parent(loc, obj)
             cmds.hide(loc)
 
@@ -745,8 +754,8 @@ class BuildComponents(object):
         for entry in constraints:
             constraintslocs.append(side + "_" + entry + "_SS_LOC")
 
-        cmds.pointConstraint(constraintslocs, ikgrp[0], mo=1)
-        cmds.orientConstraint(constraintslocs, ikgrp[0], mo=1)
+        cmds.pointConstraint(constraintslocs, ikgrp[0], maintainOffset=True)
+        cmds.orientConstraint(constraintslocs, ikgrp[0], maintainOffset=True)
 
         # Create setup for Space Switching for the IK hand group
         for longname, shortname in zip(["Rotation", "Position"], ["Rot", "Pos"]):
@@ -943,7 +952,7 @@ class BuildComponents(object):
         cmds.parent(handgrp, self.char_name + "_Rig")
 
         # Deselect everything to make sure it doesn't mess with other parts of the code
-        cmds.select(deselect=1)
+        cmds.select(deselectranslate=True)
 
         class Hand:
             def __init__(self, handgrp):
@@ -965,7 +974,7 @@ class BuildComponents(object):
 
         # Parent constrain the ribbon's joints to the bind joints
         for jnt in range(0, crvrbn[0]):
-            cmds.parentConstraint(part_name + "_" + str(jnt) + "_Connect_JNT", part_name + "_" + str(jnt+1) + "_JNT", mo=1)
+            cmds.parentConstraint(part_name + "_" + str(jnt) + "_Connect_JNT", part_name + "_" + str(jnt+1) + "_JNT", maintainOffset=True)
 
         return crvrbn
 
@@ -996,7 +1005,7 @@ class BuildComponents(object):
         for jnt, num in zip(fkjnts, range(0, len(fkjnts))):
             fkgrp = self.controllers_setup(part_name=part_name + "_" + str(num), shape=shape,
                                            scale=(3*scale, 3*scale, 3*scale))
-            cmds.xform(fkgrp[0], t=(cmds.xform(jnt, t=1, q=1, ws=1)), ro=(cmds.xform(jnt, ro=1, q=1, ws=1)), ws=1)
+            cmds.xform(fkgrp[0], translate=(cmds.xform(jnt, translate=True, query=True, worldSpace=True)), ro=(cmds.xform(jnt, rotation=True, query=True, worldSpace=True)), worldSpace=True)
             if num == 0:
                 fkgrpone = fkgrp
                 self.lockhideattr(fkgrp[0], translate=False, rotate=False)
@@ -1010,7 +1019,7 @@ class BuildComponents(object):
         # Parent the first FK controller's group to the _Rig group
         cmds.parent(fkgrpone[0], self.char_name + "_Rig")
 
-        cmds.select(d=1)
+        cmds.select(deselect=True)
 
         return fkgrpone
 
@@ -1028,26 +1037,26 @@ class BuildComponents(object):
             colour="yellow"
 
         # Overall leg group
-        leggrp = cmds.group(n=part_name, em=1)
+        leggrp = cmds.group(name=part_name, empty=True)
         cmds.parent(leggrp, self.char_name + "_Rig")
 
 
         # Create FKIK setup
-        legfkikgrp = cmds.group(n=part_name + "_FKIK", em=1, p=leggrp)
+        legfkikgrp = cmds.group(name=part_name + "_FKIK", empty=True, parent=leggrp)
         # Duplicate startjnt > heeljnt
         for cnt, jnt in enumerate([startjnt, kneejnt, anklejnt, heeljnt]):
-            newjnt = cmds.duplicate(jnt, po=1, n=jnt.replace("_JNT", "_Connect_JNT"))
+            newjnt = cmds.duplicate(jnt, parentOnly=True, name=jnt.replace("_JNT", "_Connect_JNT"))
             if jnt == startjnt:
                 cnctjntone = newjnt[0]
-                cmds.parent(newjnt, w=1)
+                cmds.parent(newjnt, world=True)
             else:
                 cmds.parent(newjnt, startjnt.replace("0", str(cnt-1)).replace("_JNT", "_Connect_JNT"))
 
         cmds.parent(cnctjntone, legfkikgrp)
 
         for fkik in ["FK", "IK"]:
-            tempjnt = cmds.duplicate(cnctjntone, n=cnctjntone.replace("Connect", fkik))
-            for childjnt in cmds.listRelatives(tempjnt[0], c=1, ad=1, f=1):
+            tempjnt = cmds.duplicate(cnctjntone, name=cnctjntone.replace("Connect", fkik))
+            for childjnt in cmds.listRelatives(tempjnt[0], children=True, allDescendants=True, fullPath=True):
                 # Rename each child joint to have the same _IKFK_JNT naming
                 cmds.rename(childjnt, str(childjnt.split("|")[-1]).replace("_Connect_JNT", "_" + fkik + "_JNT"))
 
@@ -1060,12 +1069,12 @@ class BuildComponents(object):
             cmds.setAttr(bindjointorientconstraint[0] + ".interpType", 0)
 
         # Create FK chain
-        fkjnts = cmds.listRelatives(cnctjntone.replace("Connect", "FK"), ad=1, c=1)
+        fkjnts = cmds.listRelatives(cnctjntone.replace("Connect", "FK"), allDescendents=True, c=1)
         fkjnts.append(cnctjntone.replace("Connect", "FK"))
         fkjnts.reverse()
         for cnt, jnt in enumerate(fkjnts):
             fkgrp = self.controllers_setup(part_name=part_name + "_FK_" + str(cnt), scale=(10,10,10), rotation=(0,90,0), colour=colour)
-            cmds.xform(fkgrp[0], t=(cmds.xform(jnt, t=1, q=1, ws=1)), ro=(cmds.xform(jnt, ro=1, q=1, ws=1)), ws=1)
+            cmds.xform(fkgrp[0], t=(cmds.xform(jnt, translate=True, query=True, worldSpace=True)), ro=(cmds.xform(jnt, rotation=True, query=True, worldSpace=True)), worldSpace=True)
             self.lockhideattr(fkgrp[1], rotate=False)
             if cnt == 0:
                 fkgrpone = fkgrp
@@ -1079,18 +1088,18 @@ class BuildComponents(object):
         # Create reverse Foot>Ankle joint chain
         # Create IK Foot controller and PV control
         ikgrp = self.controllers_setup(part_name=part_name + "_IK_Foot", shape="circle", rotation=(90,0,0), scale=(10,10,20), colour=colour)
-        footjntpos = cmds.xform(footjnt, t=1, q=1, ws=1)
-        cmds.xform(ikgrp[0], t=(footjntpos[0], 0, footjntpos[2]), ws=1)
+        footjntpos = cmds.xform(footjnt, translate=True, query=True, worldSpace=True)
+        cmds.xform(ikgrp[0], t=(footjntpos[0], 0, footjntpos[2]), worldSpace=True)
         cmds.parent(ikgrp[0], leggrp)
         self.lockhideattr(ikgrp[0], visibility=False)
         self.lockhideattr(ikgrp[1], rotate=False, translate=False)
 
         # Create IK Reverse Controller
         ikrevgrp = self.controllers_setup(part_name=part_name + "_IK_Rev_Foot", shape="square", scale=(10,10,10), colour=colour)
-        cmds.xform(ikrevgrp[0], t=(cmds.xform(heeljnt, t=1, q=1, ws=1)))
-        cmds.xform(ikrevgrp[0], ro=(cmds.xform(anklejnt, ro=1, q=1, ws=1)))
-        cmds.xform(ikrevgrp[0], t=(0, 7, -7), r=1)
-        cmds.xform(ikrevgrp[1], piv=(cmds.xform(heeljnt, t=1, q=1, ws=1)), ws=1)
+        cmds.xform(ikrevgrp[0], translate=(cmds.xform(heeljnt, translate=True, query=True, worldSpace=True)))
+        cmds.xform(ikrevgrp[0], rotation=(cmds.xform(anklejnt, rotation=True, query=True, worldSpace=True)))
+        cmds.xform(ikrevgrp[0], translate=(0, 7, -7), relative=1)
+        cmds.xform(ikrevgrp[1], pivot=(cmds.xform(heeljnt, translate=True, query=True, worldSpace=True)), worldSpace=True)
 
         cmds.parent(ikrevgrp[0], leggrp)
         self.lockhideattr(ikrevgrp[1], rotate=False, translate=False)
@@ -1104,11 +1113,11 @@ class BuildComponents(object):
         else:
             legattrsgrp = self.controllers_setup(part_name=side + "_Leg_Attrs", shape="pointedsquare", scale=(8, 8, 8),
                                                  colour=colour)
-        cmds.xform(legattrsgrp[0], t=(cmds.xform(cnctjntone, t=1, q=1, ws=1)), ws=1)
+        cmds.xform(legattrsgrp[0], t=(cmds.xform(cnctjntone, translate=True, query=True, worldSpace=True)), worldSpace=True)
         # Parent arm attrs group to arm group
         cmds.parent(legattrsgrp[0], leggrp)
         # Parent constrain arm attrs group to the scapula's
-        cmds.parentConstraint(cnctjntone, legattrsgrp[0], mo=1)
+        cmds.parentConstraint(cnctjntone, legattrsgrp[0], maintainOffset=True)
         self.lockhideattr(legattrsgrp[1])
 
 
@@ -1117,7 +1126,7 @@ class BuildComponents(object):
         cmds.addAttr(sn="FKIK", ln="FKIK", min=0, max=1, dv=0, ex=1, h=0, k=1)
         cmds.addAttr(sn="Pos_SS", ln="Position_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
         cmds.addAttr(sn="Rot_SS", ln="Rotation_Space_Switching", enumName="Root:Hips:Chest:Scapula", **self.enum_kwargs)
-        cmds.select(d=1)
+        cmds.select(deselect=True)
         # default FKIK attr to IK
         cmds.setAttr(legattrsgrp[1] + ".FKIK", 1)
 
@@ -1145,29 +1154,29 @@ class BuildComponents(object):
 
         # Create IK Eval chain leg
         ikevaljntone = cmds.joint(n=part_name + "_IK_Eval_0_JNT")
-        cmds.xform(ikevaljntone, t=cmds.xform(startjnt, q=1, t=1, ws=1))
+        cmds.xform(ikevaljntone, t=cmds.xform(startjnt, query=True, translate=True, worldSpace=True))
 
-        ikevaljnttwopos = self.vector_lerp(cmds.xform(kneejnt, q=1, t=1, ws=1), cmds.xform(anklejnt, q=1, t=1, ws=1), .5)
-        ikevaljnttwoposzposone = cmds.xform(kneejnt, q=1, t=1, ws=1)
-        ikevaljnttwoposzpostwo = cmds.xform(anklejnt, q=1, t=1, ws=1)
+        ikevaljnttwopos = self.vector_lerp(cmds.xform(kneejnt, query=True, translate=True, worldSpace=True), cmds.xform(anklejnt, query=True, translate=True, worldSpace=True), .5)
+        ikevaljnttwoposzposone = cmds.xform(kneejnt, query=True, translate=True, worldSpace=True)
+        ikevaljnttwoposzpostwo = cmds.xform(anklejnt, query=True, translate=True, worldSpace=True)
         ikevaljnttwopos = (ikevaljnttwopos[0], ikevaljnttwopos[1], min(ikevaljnttwoposzposone[2], ikevaljnttwoposzpostwo[2])-5)
         ikevaljnttwo = cmds.joint(n=part_name + "_IK_Eval_1_JNT")
-        cmds.xform(ikevaljnttwo, t=ikevaljnttwopos, ws=1)
+        cmds.xform(ikevaljnttwo, t=ikevaljnttwopos, worldSpace=True)
 
         ikevaljntthree = cmds.joint(n=part_name + "_IK_Eval_2_JNT")
-        cmds.xform(ikevaljntthree, t=cmds.xform(heeljnt, q=1, t=1, ws=1), ws=1)
-        cmds.select(d=1)
+        cmds.xform(ikevaljntthree, t=cmds.xform(heeljnt, query=True, translate=True, worldSpace=True), worldSpace=True)
+        cmds.select(deselect=True)
 
         cmds.parent(ikevaljntone, leggrp)
 
         evalikh = cmds.ikHandle(n=part_name + "_IK_Eval_IKH", sj=ikevaljntone, ee=ikevaljntthree)
-        cmds.select(d=1)
+        cmds.select(deselect=True)
 
         # Reverse IK Eval lower leg
         ikevalrevjntone = cmds.joint(n=part_name + "_IK_EvalRev_0_JNT")
-        cmds.xform(ikevalrevjntone, t=cmds.xform(heeljnt, q=1, t=1, ws=1), ws=1)
+        cmds.xform(ikevalrevjntone, t=cmds.xform(heeljnt, query=True, translate=True, worldSpace=True), worldSpace=True)
         ikevalrevjnttwo = cmds.joint(n=part_name + "_IK_EvalRev_1_JNT")
-        cmds.xform(ikevalrevjnttwo, t=cmds.xform(anklejnt, q=1, t=1, ws=1), ws=1)
+        cmds.xform(ikevalrevjnttwo, t=cmds.xform(anklejnt, query=True, translate=True, worldSpace=True), worldSpace=True)
 
         cmds.parent(ikevalrevjntone, leggrp)
 
@@ -1177,7 +1186,7 @@ class BuildComponents(object):
 
         cmds.parent(upperikh[0], leggrp)
 
-        cmds.parentConstraint(ikevalrevjnttwo, upperikh[0], mo=1)
+        cmds.parentConstraint(ikevalrevjnttwo, upperikh[0], maintainOffset=True)
 
         cmds.parent(evalikh[0], ikgrp[1])
 
@@ -1190,22 +1199,22 @@ class BuildComponents(object):
 
         cmds.parent(lowerikh[0], leggrp)
 
-        ikjorientconst = cmds.orientConstraint(ikgrp[1], heeljnt.replace("_JNT", "_IK_JNT"), mo=1)
+        ikjorientconst = cmds.orientConstraint(ikgrp[1], heeljnt.replace("_JNT", "_IK_JNT"), maintainOffset=True)
         cmds.setAttr(ikjorientconst[0] + ".interpType", 0)
 
-        cmds.parentConstraint(ikevaljntthree, ikrevgrp[0], mo=1)
-        cmds.parentConstraint(ikrevgrp[1], ikevalrevjntone, mo=1)
+        cmds.parentConstraint(ikevaljntthree, ikrevgrp[0], maintainOffset=True)
+        cmds.parentConstraint(ikrevgrp[1], ikevalrevjntone, maintainOffset=True)
 
         self.lockhideattr(ikrevgrp[0], visibility=False)
 
 
         # Parent constrain Connect joints to bind joints
         for i in [startjnt, kneejnt, anklejnt, heeljnt]:
-            bindjparentconst = cmds.parentConstraint(i.replace("_JNT", "_Connect_JNT"), i, mo=1)
+            bindjparentconst = cmds.parentConstraint(i.replace("_JNT", "_Connect_JNT"), i, maintainOffset=True)
 
         # Point constrain the upper _IK_JNT to the hips
-        cmds.parentConstraint(cmds.listRelatives(startjnt, p=1), startjnt.replace("_JNT", "_IK_JNT"), mo=1)
-        cmds.parentConstraint(cmds.listRelatives(startjnt, p=1), ikevaljntone, mo=1)
+        cmds.parentConstraint(cmds.listRelatives(startjnt, p=1), startjnt.replace("_JNT", "_IK_JNT"), maintainOffset=True)
+        cmds.parentConstraint(cmds.listRelatives(startjnt, p=1), ikevaljntone, maintainOffset=True)
 
         for i in [ikevalrevjntone, ikevaljntone, evalikh, lowerikh, upperikh, legfkikgrp]:
             cmds.hide(i)
