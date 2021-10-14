@@ -78,12 +78,12 @@ class Char_Builder(object):
 
 
         # Legs setup
-        Lf_legparts = components.digileg(partname="Lf_Leg", startjnt="Lf_Leg_0_JNT",
+        Lf_legparts = components.digileg(part_name="Lf_Leg", startjnt="Lf_Leg_0_JNT",
                                       kneejnt="Lf_Leg_1_JNT", anklejnt="Lf_Leg_2_JNT",
                                       heeljnt="Lf_Leg_3_JNT", footjnt="Lf_Paw_0_JNT")
         self.Lf_legparts = Lf_legparts
 
-        Rt_legparts = components.digileg(partname="Rt_Leg", startjnt="Rt_Leg_0_JNT",
+        Rt_legparts = components.digileg(part_name="Rt_Leg", startjnt="Rt_Leg_0_JNT",
                                       kneejnt="Rt_Leg_1_JNT", anklejnt="Rt_Leg_2_JNT",
                                       heeljnt="Rt_Leg_3_JNT", footjnt="Rt_Paw_0_JNT",
                                         flipped=1)
@@ -124,7 +124,7 @@ class Char_Builder(object):
 
         # Lock scale on Hand groups
         for side in [self.Lf_handparts.handgrp, self.Rt_handparts.handgrp]:
-            components.lockhideattr(side, translate=False, rotate=False)
+            components.lockhideattr(side, translation=False, rotate=False)
 
         # Controls Display Layer
         ctrlsdisplaylayer = self.setupparts.displayers[2]
