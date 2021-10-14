@@ -7,11 +7,13 @@ I can't promise that anything in $Staging will work, as for the meanwhile it'll 
 
 
 ## USAGE
+### ! This autorigger currently is intended to be used entirely through code, so no UI exists for it, and likely wont for a while !
+
 For each character rig you want to create, you'll want to make a new copy of `Template_Run_Script.py`, with the character name as the file name.
 
 You can then edit this file to create all the individual pieces for that specific character, based on the build components in `Build_Components.py`
 
-Finally you can run the individual character's build script from inside the rig file to build the rig 
+Finally you can run the individual character's build script from inside the rig file to build the rig on top of an already existing joint hierarchy
 
 ## Example rig
 

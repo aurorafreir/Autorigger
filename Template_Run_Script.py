@@ -107,6 +107,8 @@ class Char_Builder(object):
         cmds.parentConstraint(self.Lf_armparts.connectjnts[2], self.Lf_handparts.handgrp, maintainOffset=True)
         cmds.parentConstraint(self.Rt_armparts.connectjnts[2], self.Rt_handparts.handgrp, maintainOffset=True)
 
+        # Parent constrain the head setup to the neck
+        # Used in example rig, as the head rig was made manually
         cmds.parentConstraint(self.neckparts.neckgrp[1], "Head_GRP", maintainOffset=True)
 
         cmds.select(d=1)
