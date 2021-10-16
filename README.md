@@ -7,7 +7,7 @@ I can't promise that anything in $Staging will work, as for the meanwhile it'll 
 
 
 ## USAGE
-### ! This autorigger currently is intended to be used entirely through code, so no UI exists for it, and likely wont for a while !
+### ! This autorigger currently is intended to be used entirely through code, so no UI exists for it, though that is planned for the next update !
 
 For each character rig you want to create, you'll want to make a new copy of `Template_Run_Script.py`, with the character name as the file name.
 
